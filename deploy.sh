@@ -189,6 +189,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       CORS_ORIGIN: ${CORS_ORIGIN}
+    ports:
+      - "4000:4000"
     networks: [yc_network]
 
   image-proxy:
@@ -210,6 +212,8 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       WATERMARK_TEXT: ${WATERMARK_TEXT}
       PROXY_SECRET: ${PROXY_SECRET}
+    ports:
+      - "5000:5000"
     networks: [yc_network]
 
   photo-quality-service:
@@ -245,6 +249,8 @@ services:
         VITE_PROXY_URL: ${VITE_PROXY_URL}
     container_name: yc_frontend
     restart: unless-stopped
+    ports:
+      - "3000:80"
     networks: [yc_network]
 
 volumes:
