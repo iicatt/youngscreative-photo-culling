@@ -1,0 +1,184 @@
+﻿version: '3.9'
+
+services:
+  # ─────────────────────────────────────────
+  # PostgreSQL Database
+  # ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: yc_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cfc-foto}
+      POSTGRES_USER: ${POSTGRES_USER:-ycuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ycpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - yc_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ycuser} -d ${POSTGRES_DB:-cfc-foto}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # MinIO Object Storage
+  # ─────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: yc_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web Console
+    networks:
+      - yc_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ─────────────────────────────────────────
+  # Backend API (Express.js)
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yc_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ycuser}:${POSTGRES_PASSWORD:-ycpassword}@postgres:5432/${POSTGRES_DB:-cfc-foto}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_changeme}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    networks:
+      - yc_network
+
+  # ─────────────────────────────────────────
+  # Image Proxy (Express + Sharp)
+  # ─────────────────────────────────────────
+  image-proxy:
+    build:
+      context: ./image-proxy
+      dockerfile: Dockerfile
+    container_name: yc_image_proxy
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 5000
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      WATERMARK_TEXT: ${WATERMARK_TEXT:-© CFC (Culling Foto Creative)}
+      PROXY_SECRET: ${PROXY_SECRET:-proxysecret_changeme}
+    volumes:
+      - ./image-proxy:/app
+      - /app/node_modules
+      - ./assets:/app/assets:ro
+    ports:
+      - "5000:5000"
+    networks:
+      - yc_network
+
+  # ─────────────────────────────────────────
+  # Photo Quality Service (Python FastAPI)
+  # ─────────────────────────────────────────
+  photo-quality-service:
+    build:
+      context: ./photo-quality-service
+      dockerfile: Dockerfile
+    container_name: yc_photo_quality
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      PORT: 6000
+      # MinIO — pakai hostname service Docker bukan localhost
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ycuser}:${POSTGRES_PASSWORD:-ycpassword}@postgres:5432/${POSTGRES_DB:-cfc-foto}
+      # Threshold analisis — bisa di-tune tanpa rebuild image
+      BLUR_THRESHOLD: ${BLUR_THRESHOLD:-100}
+      EAR_THRESHOLD: ${EAR_THRESHOLD:-0.21}
+      HAMMING_THRESHOLD: ${HAMMING_THRESHOLD:-5}
+    ports:
+      - "6000:6000"
+    networks:
+      - yc_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:6000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s   # MediaPipe butuh waktu loading saat pertama start
+
+  # ─────────────────────────────────────────
+  # Frontend React (Vite dev server)
+  # ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: yc_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - image-proxy
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+      VITE_PROXY_URL: http://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - yc_network
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  yc_network:
+    driver: bridge

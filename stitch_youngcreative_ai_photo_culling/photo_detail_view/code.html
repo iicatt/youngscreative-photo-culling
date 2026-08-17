@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Photo Detail - YoungCreative</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#00323e",
+                        "surface-container-highest": "#353534",
+                        "primary": "#ffb59c",
+                        "success": "#4CAF50",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#001f27",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#5c1900",
+                        "on-secondary-fixed-variant": "#584323",
+                        "surface-dim": "#131313",
+                        "on-primary-fixed": "#390c00",
+                        "on-primary-fixed-variant": "#832700",
+                        "on-tertiary-fixed-variant": "#004e5f",
+                        "on-surface-variant": "#e0c0b6",
+                        "outline-variant": "#58413a",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-on-surface": "#313030",
+                        "secondary-container": "#584323",
+                        "on-error": "#690005",
+                        "primary-fixed": "#ffdbd0",
+                        "secondary-fixed-dim": "#e0c298",
+                        "surface-tint": "#ffb59c",
+                        "surface-light": "#FFFFFF",
+                        "surface-bright": "#393939",
+                        "on-primary-container": "#571700",
+                        "on-surface": "#e5e2e1",
+                        "border-dark": "#333333",
+                        "surface-container": "#201f1f",
+                        "surface-variant": "#353534",
+                        "tertiary-fixed-dim": "#5dd5f8",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#281800",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary": "#003642",
+                        "secondary": "#e0c298",
+                        "on-secondary-container": "#ceb188",
+                        "tertiary": "#5dd5f8",
+                        "inverse-primary": "#a93705",
+                        "inverse-surface": "#e5e2e1",
+                        "text-muted": "#9CA3AF",
+                        "on-secondary": "#402d0f",
+                        "primary-container": "#f26b3a",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-fixed": "#b3ebff",
+                        "error": "#ffb4ab",
+                        "surface-dark": "#242424",
+                        "tertiary-container": "#00a2c3",
+                        "background": "#131313",
+                        "secondary-fixed": "#fedeb2",
+                        "primary-fixed-dim": "#ffb59c",
+                        "text-primary": "#F3F4F6",
+                        "on-background": "#e5e2e1",
+                        "outline": "#a78a81"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-1": "0.25rem",
+                        "gutter": "1px",
+                        "bento-gap": "12px",
+                        "margin-mobile": "16px",
+                        "unit-2": "0.5rem",
+                        "margin-desktop": "24px",
+                        "unit-4": "1rem",
+                        "unit-8": "2rem",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Inter"],
+                        "mono-label": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "mono-label": ["11px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.text-primary'); }
+        .bento-cell { border: 1px solid theme('colors.border-dark'); background-color: theme('colors.surface-dark'); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md overflow-hidden">
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-surface border-b border-border-dark flex justify-between items-center w-full px-margin-desktop h-16 shrink-0 z-50">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-primary">YoungCreative</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors opacity-80 active:opacity-100 transition-opacity" href="#">Gallery</a>
+<a class="text-primary border-b-2 border-primary pb-unit-1 font-label-sm text-label-sm hover:text-primary transition-colors opacity-80 active:opacity-100 transition-opacity" href="#">Selection</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors opacity-80 active:opacity-100 transition-opacity" href="#">Download</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors" data-icon="notifications">notifications</span>
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-border-dark object-cover" data-alt="A small circular avatar showing a professional photographer in a dimly lit studio setting. Cinematic lighting, utilitarian aesthetic, high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzPeWVfKKe_gHYwxLJTwfSZA2sgr-8fP8IcCAPm9WezNJ0yalZkv_i-ESDvixcdevle2OlGtGTLzCdIBkRs0nnMGSAuWMXgu8ThRcjCaj0pYV9KHdtzFdHI6SAC4okWkUcG9Cz0SEIPDPBpbkEpPE6kHu8pqwdFHg5oPys4YiEIizKk9Aw0txx7-htvqpHPHxP7PGoA0SyJxc__gUExRRxY2xyofMrmxlLv38RL2jBBvtYnuYxGaq4"/>
+<button class="bg-primary-container text-white px-4 py-2 rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-opacity-90 transition-colors">Download All</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Photo Preview Area -->
+<section class="flex-1 bg-surface-dim relative flex items-center justify-center p-unit-4 overflow-hidden">
+<!-- Navigation Arrows -->
+<button class="absolute left-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-surface-dark border border-border-dark text-text-primary hover:text-primary transition-colors hover:border-primary group">
+<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="absolute right-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-surface-dark border border-border-dark text-text-primary hover:text-primary transition-colors hover:border-primary group">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</button>
+<!-- Image Container -->
+<div class="relative max-w-full max-h-full flex items-center justify-center group shadow-2xl">
+<img alt="Selected Photo" class="max-w-full max-h-[870px] object-contain border border-border-dark" data-alt="A breathtaking, high-resolution portrait photograph of a model in a stunning cinematic setting. The lighting is dramatic, with deep shadows and vibrant highlights. The composition is flawless, reflecting professional editorial quality. The aesthetic aligns perfectly with a high-end, structured bento-grid minimalism, emphasizing utilitarian rigor and intense focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHVaNWMFU0ZOvEWEm5QTeTSQWbw_4aPffLfBPosPfZi7b6JYvh8VglQ-1EMyZ0XhX4LvphN2YlLTHR-rLt8xDQ_qXHJF_sg_8ME2k9kI2y7m_a9cOEP4CIKRgwwR7REF5N9eo2unB92rE_U5IxSL1bDUwECFBSohYWp5uUgQAm6af_qjC_WA2WoEvkeJQurLi-cuizJYu6IOW3HD9Tyok_SMaQyj3t1Hq_VbolF4xxpX2WFxYDOLuo"/>
+<!-- Watermark Overlay -->
+<div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-30 select-none">
+<span class="font-headline-lg text-headline-lg font-bold text-white tracking-[0.2em] transform -rotate-12">YOUNGCREATIVE</span>
+</div>
+</div>
+</section>
+<!-- Right Panel - Selection & Metadata -->
+<aside class="w-96 shrink-0 border-l border-border-dark bg-surface flex flex-col z-20">
+<div class="p-6 flex flex-col h-full gap-6">
+<!-- Header -->
+<div class="flex justify-between items-start border-b border-border-dark pb-4">
+<div>
+<h2 class="font-headline-md text-headline-md text-text-primary">IMG_8492.CR3</h2>
+<p class="font-mono-label text-mono-label text-text-muted mt-1">24.5 MB • 6000 x 4000 px</p>
+</div>
+<span class="bg-surface-container-highest text-text-primary font-mono-label px-2 py-1 rounded">RAW</span>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col gap-3">
+<label class="font-label-sm text-label-sm text-text-muted mb-1 uppercase tracking-wider">Status Keputusan</label>
+<div class="flex gap-3">
+<button class="flex-1 py-3 border border-border-dark bg-surface-dark text-text-primary rounded font-label-sm text-label-sm uppercase tracking-wider hover:border-success hover:text-success transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg" data-icon="check_circle">check_circle</span>
+                            Pilih
+                        </button>
+<button class="flex-1 py-3 border border-border-dark bg-surface-dark text-text-primary rounded font-label-sm text-label-sm uppercase tracking-wider hover:border-error hover:text-error transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg" data-icon="error">error</span>
+                            Revisi
+                        </button>
+</div>
+</div>
+<!-- Notes Area -->
+<div class="flex-1 flex flex-col gap-2 min-h-0">
+<label class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider" for="notes">Catatan untuk Fotografer</label>
+<textarea class="w-full flex-1 bg-surface-dim border border-border-dark rounded p-3 font-body-md text-body-md text-text-primary focus:border-primary focus:ring-0 resize-none placeholder:text-text-muted transition-colors" id="notes" placeholder="Tambahkan catatan khusus untuk retouching atau komposisi di sini..."></textarea>
+</div>
+<!-- High-Res Download (Contextual) -->
+<div class="pt-4 border-t border-border-dark">
+<button class="w-full py-3 bg-primary-container text-white rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled="" title="Pilih foto terlebih dahulu untuk mengunduh">
+<span class="material-symbols-outlined text-lg" data-icon="cloud_download">cloud_download</span>
+                        Download High-Res
+                    </button>
+<p class="text-center mt-2 font-mono-label text-mono-label text-text-muted">Tersedia setelah foto disetujui</p>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

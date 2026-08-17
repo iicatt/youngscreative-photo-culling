@@ -1,0 +1,586 @@
+﻿================================================================
+RINGKASAN APLIKASI CFC (Culling Foto Creative)
+Sistem Seleksi Foto Berbasis Web dengan Object Storage MinIO
+================================================================
+Dibuat : Juli 2026
+Versi  : 1.0.0
+
+================================================================
+A. GAMBARAN UMUM
+================================================================
+CFC (Culling Foto Creative) adalah sistem web untuk fotografer dan klien dalam
+proses seleksi foto (photo culling). Fotografer mengunggah foto
+beresolusi tinggi ke MinIO, kemudian klien mengakses galeri via
+tautan token unik untuk meninjau dan memilih foto.
+
+Fitur utama:
+  - Upload massal foto (drag & drop, hingga 100 file sekaligus)
+  - Object storage terpusat dengan MinIO (self-hosted)
+  - Image Proxy dengan resize + watermark dinamis (WebP output)
+  - AI Culling otomatis: deteksi blur, mata tertutup, duplikat
+  - Seleksi foto oleh fotografer maupun klien
+  - Download foto asli via MinIO presigned URL (15 menit)
+  - 3 mode akses klien: Pilih Sendiri / Sudah Dipilihkan / Lihat-Lihat
+
+================================================================
+B. ARSITEKTUR SISTEM
+================================================================
+5 layanan berjalan bersamaan:
+
+  [Browser] --> [Frontend React :3000]
+                     |
+              [Vite Dev Proxy]
+              /              \
+  [Backend API :4000]   [Image Proxy :5000]
+         |    \                   |
+  [PostgreSQL]  [MinIO :9000] <---+
+  [:5432]            |
+                     |
+          [Photo Quality Service :6000]
+          (Python FastAPI - AI Culling)
+
+================================================================
+C. TECH STACK
+================================================================
+Frontend:
+  - React 18 + Vite 5
+  - React Router DOM v6
+  - TanStack React Query v5
+  - Zustand (state management autentikasi)
+  - Axios (HTTP client)
+  - React Dropzone (drag & drop upload)
+  - React Hot Toast (notifikasi)
+  - Tailwind CSS v3
+  - Lucide React (ikon)
+
+Backend API:
+  - Node.js >= 20
+  - Express.js 4
+  - JWT (jsonwebtoken) - autentikasi fotografer
+  - bcrypt - hash password
+  - Multer - upload file multipart
+  - node-postgres (pg) - koneksi PostgreSQL
+  - MinIO JS SDK - interaksi object storage
+  - Nanoid - generate token unik
+  - Zod - validasi input
+  - Helmet + CORS + Rate Limiter
+
+Image Proxy:
+  - Node.js + Express.js
+  - Sharp - resize & watermark gambar on-the-fly
+  - MinIO JS SDK - stream objek dari bucket
+
+Photo Quality Service (AI Culling):
+  - Python 3.11
+  - FastAPI + Uvicorn
+  - OpenCV (cv2) - deteksi blur via Laplacian variance
+  - MediaPipe Tasks API - deteksi wajah & EAR mata tertutup
+  - ImageHash (pHash) - deteksi foto duplikat/mirip
+  - psycopg2 - koneksi PostgreSQL
+  - MinIO Python SDK
+
+Database: PostgreSQL 18
+Object Storage: MinIO (self-hosted)
+Orkestrasi: Docker + Docker Compose
+
+================================================================
+D. STRUKTUR FOLDER PROYEK
+================================================================
+cfc-foto/
+|
+|-- docker-compose.yml          <- Orkestrasi 5 service
+|-- .env                        <- Environment variables (lokal)
+|-- .env.example                <- Template environment
+|-- .gitignore
+|-- start-dev.ps1               <- Script startup tanpa Docker
+|-- RINGKASAN_APLIKASI.txt      <- File ini
+|
+|-- database/
+|   |-- init.sql                <- Schema awal (tables, triggers, seed)
+|   |-- migrate_quality.sql     <- Migrasi kolom AI culling
+|   |-- migrate_mode_seleksi.sql<- Migrasi kolom mode seleksi
+|
+|-- backend/
+|   |-- Dockerfile
+|   |-- package.json
+|   |-- src/
+|       |-- index.js            <- Entry point Express
+|       |-- config/
+|       |   |-- db.js           <- Koneksi PostgreSQL pool
+|       |   |-- minio.js        <- MinIO client + ensureBucket()
+|       |-- middleware/
+|       |   |-- auth.js         <- JWT verify middleware
+|       |   |-- errorHandler.js <- Global error handler
+|       |-- routes/
+|       |   |-- authRoutes.js
+|       |   |-- sesiRoutes.js
+|       |   |-- klienRoutes.js
+|       |-- controllers/
+|       |   |-- authController.js      <- Login, getMe
+|       |   |-- sesiController.js      <- CRUD sesi + unduh seleksi
+|       |   |-- fotoController.js      <- Upload, list, seleksi
+|       |   |-- qualityController.js   <- Status & trigger AI culling
+|       |   |-- downloadController.js  <- Presigned URL download
+|       |-- services/
+|           |-- qualityWebhook.js      <- Fire-and-forget ke AI service
+|
+|-- image-proxy/
+|   |-- Dockerfile
+|   |-- package.json
+|   |-- src/
+|       |-- index.js            <- Entry point Express proxy
+|       |-- proxyHandler.js     <- Core resize + watermark pipeline
+|       |-- watermark.js        <- SVG watermark generator
+|       |-- config/minio.js
+|
+|-- photo-quality-service/
+|   |-- Dockerfile
+|   |-- requirements.txt
+|   |-- app/
+|       |-- main.py             <- FastAPI app + background tasks
+|       |-- core/
+|       |   |-- config.py       <- Settings dari env vars
+|       |   |-- database.py     <- psycopg2 context manager
+|       |   |-- minio_client.py <- Download bytes dari MinIO
+|       |-- analyzers/
+|           |-- image_utils.py      <- Decode + resize ke 640px
+|           |-- blur_detector.py    <- cv2.Laplacian variance
+|           |-- eyes_detector.py    <- MediaPipe FaceLandmarker + EAR
+|           |-- duplicate_detector.py <- pHash + Hamming distance
+|
+|-- frontend/
+|   |-- Dockerfile
+|   |-- index.html
+|   |-- vite.config.js
+|   |-- tailwind.config.js
+|   |-- src/
+|       |-- main.jsx            <- React entry point
+|       |-- App.jsx             <- Router + route definitions
+|       |-- index.css           <- Tailwind + custom classes
+|       |-- store/
+|       |   |-- authStore.js    <- Zustand auth state (persist)
+|       |-- services/
+|       |   |-- api.js          <- Axios + JWT interceptor
+|       |   |-- proxyUrl.js     <- URL builder image proxy
+|       |-- pages/
+|       |   |-- LoginPage.jsx
+|       |   |-- DashboardPage.jsx
+|       |   |-- SesiDetailPage.jsx
+|       |   |-- UploadPage.jsx
+|       |   |-- KlienLanding.jsx    <- Halaman pilih mode
+|       |   |-- KlienPage.jsx       <- Galeri foto klien
+|       |   |-- KlienFotoDetail.jsx <- Detail + seleksi foto
+|       |-- components/
+|           |-- common/
+|           |   |-- Navbar.jsx
+|           |   |-- StatusBadge.jsx
+|           |   |-- QualityBadges.jsx
+|           |   |-- Spinner.jsx
+|           |-- photographer/
+|               |-- UploadZone.jsx
+|               |-- AiCullingPanel.jsx
+
+================================================================
+E. DATABASE SCHEMA
+================================================================
+Database: cfc-foto (PostgreSQL)
+
+---- ENUM TYPES ----
+
+status_sesi_enum    : aktif | selesai
+status_seleksi_enum : belum_ditinjau | siap_edit | ditolak | revisi
+mode_seleksi_enum   : pilih_sendiri | oleh_fotografer | lihat_saja
+
+---- TABEL: users ----
+Menyimpan akun fotografer
+
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
+  nama        VARCHAR(255) NOT NULL
+  email       VARCHAR(255) NOT NULL UNIQUE
+  password    VARCHAR(255) NOT NULL  -- bcrypt hash cost 12
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+
+Index: idx_users_email ON users(email)
+
+---- TABEL: sesi ----
+Satu sesi = satu proyek foto untuk satu klien
+
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid()
+  user_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
+  nama_sesi     VARCHAR(255) NOT NULL
+  nama_klien    VARCHAR(255) NOT NULL
+  nama_bucket   VARCHAR(63) NOT NULL      -- MinIO bucket name
+  token_akses   VARCHAR(64) NOT NULL UNIQUE
+  status_sesi   status_sesi_enum DEFAULT 'aktif'
+  mode_seleksi  mode_seleksi_enum DEFAULT 'pilih_sendiri'
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+
+Index: idx_sesi_user_id, idx_sesi_token_akses, idx_sesi_mode_seleksi
+
+---- TABEL: foto ----
+Metadata setiap foto yang diunggah ke MinIO
+
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid()
+  sesi_id         UUID NOT NULL REFERENCES sesi(id) ON DELETE CASCADE
+  nama_file       VARCHAR(500) NOT NULL
+  object_key      VARCHAR(1000) NOT NULL   -- path di MinIO bucket
+  ukuran_file     BIGINT NOT NULL          -- bytes
+  tipe_file       VARCHAR(100) NOT NULL    -- MIME type
+  status_seleksi  status_seleksi_enum DEFAULT 'belum_ditinjau'
+  catatan_klien   TEXT
+  -- Kolom AI Culling (nullable, diisi setelah analisis selesai):
+  quality_analyzed BOOLEAN DEFAULT FALSE
+  is_blurry        BOOLEAN
+  blur_score       FLOAT
+  face_detected    BOOLEAN
+  eyes_closed      BOOLEAN
+  ear_score        FLOAT
+  is_duplicate     BOOLEAN
+  duplicate_of     UUID REFERENCES foto(id) ON DELETE SET NULL
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+
+Index: idx_foto_sesi_id, idx_foto_status_seleksi, idx_foto_object_key,
+       idx_foto_is_blurry, idx_foto_eyes_closed, idx_foto_is_duplicate,
+       idx_foto_quality_done
+
+---- TABEL: foto_hash ----
+Menyimpan pHash setiap foto untuk deteksi duplikat
+
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
+  foto_id     UUID NOT NULL UNIQUE REFERENCES foto(id) ON DELETE CASCADE
+  sesi_id     UUID NOT NULL REFERENCES sesi(id) ON DELETE CASCADE
+  phash_value VARCHAR(64) NOT NULL  -- hex string pHash 64-bit
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+
+Index: idx_foto_hash_sesi_id, idx_foto_hash_foto_id
+
+---- TRIGGERS ----
+set_updated_at_users  : auto-update updated_at saat UPDATE users
+set_updated_at_sesi   : auto-update updated_at saat UPDATE sesi
+set_updated_at_foto   : auto-update updated_at saat UPDATE foto
+
+---- SEED DATA ----
+User demo: fotografer@demo.com / password123
+
+================================================================
+F. API ENDPOINTS — BACKEND (port 4000)
+================================================================
+
+---- AUTH ----
+POST   /api/auth/login          Login fotografer (email + password)
+GET    /api/auth/me             Info user yang sedang login [JWT]
+
+---- SESI (semua butuh JWT) ----
+GET    /api/sesi                Daftar semua sesi milik fotografer
+POST   /api/sesi                Buat sesi baru (auto-create MinIO bucket)
+GET    /api/sesi/:id            Detail sesi + statistik foto
+PATCH  /api/sesi/:id/tutup      Tutup sesi (status -> selesai)
+GET    /api/sesi/:id/unduh-seleksi  Download manifest JSON foto siap edit
+
+---- AI CULLING STATUS ----
+GET    /api/sesi/:id/quality-status      Progress analisis kualitas
+POST   /api/sesi/:id/quality-trigger     Trigger ulang foto yang belum dianalisis
+POST   /api/sesi/:id/quality-trigger-all Trigger ulang semua foto sesi
+
+---- FOTO (semua butuh JWT) ----
+GET    /api/sesi/:id/foto                Daftar foto + kolom kualitas
+POST   /api/sesi/:id/foto/upload         Upload massal (multipart, max 100 file)
+DELETE /api/sesi/:id/foto/:fotoId        Hapus foto (DB + MinIO)
+PATCH  /api/sesi/:id/foto/:fotoId/seleksi   Set status seleksi oleh fotografer
+PATCH  /api/sesi/:id/seleksi-massal         Set status banyak foto sekaligus
+GET    /api/sesi/:id/foto/:fotoId/download  Presigned URL download foto asli
+GET    /api/sesi/:id/download-semua         Manifest + presigned URL semua foto
+
+---- KLIEN (akses via token, tanpa login) ----
+GET    /api/klien/:token/foto              Daftar foto + info sesi
+PATCH  /api/klien/:token/foto/:fotoId      Update status seleksi oleh klien
+GET    /api/klien/:token/foto/:fotoId/download  Presigned URL download asli
+
+---- SYSTEM ----
+GET    /health                  Health check backend
+
+================================================================
+G. IMAGE PROXY ENDPOINTS (port 5000)
+================================================================
+GET /proxy/:bucket/:objectKey
+
+Query parameters:
+  preset  : thumb | medium | full
+            thumb  = 240x240px, WebP q72, cache 7 hari
+            medium = 900px wide, WebP q82, cache 1 hari
+            full   = 1920px wide, JPEG q88, cache 1 jam
+  w, h    : dimensi custom (override preset)
+  wm      : 0 = tanpa watermark, 1 = dengan watermark (default: 1)
+  fmt     : jpeg | webp | png (default: webp)
+  q       : kualitas 1-100
+
+Response Headers:
+  Content-Type  : image/webp (atau sesuai fmt)
+  Cache-Control : public, max-age=604800, immutable (thumb)
+  ETag          : fingerprint untuk conditional request
+  Vary          : Accept
+
+GET /health                     Health check image proxy
+
+================================================================
+H. PHOTO QUALITY SERVICE ENDPOINTS (port 6000)
+================================================================
+POST /analyze                   Terima request analisis (202 Accepted)
+                                Body: { foto_id, sesi_id, object_key, bucket }
+                                Analisis dijalankan di background thread
+
+GET  /health                    Health check + info threshold aktif
+
+Pipeline analisis (paralel, ~1-3 detik per foto):
+  1. Download gambar dari MinIO sekali
+  2. Resize ke 640px (image_utils.py)
+  3. Paralel 3 thread:
+     a. detect_blur     - cv2.Laplacian variance
+                          is_blurry = True jika score < BLUR_THRESHOLD (default: 100)
+     b. detect_eyes     - MediaPipe FaceLandmarker + EAR
+                          EAR = (||p2-p6|| + ||p3-p5||) / (2 * ||p1-p4||)
+                          eyes_closed = True jika EAR < EAR_THRESHOLD (default: 0.21)
+     c. detect_duplicate- imagehash pHash + Hamming distance
+                          is_duplicate = True jika distance <= HAMMING_THRESHOLD (default: 5)
+  4. UPDATE tabel foto dengan hasil
+
+Threshold bisa dikonfigurasi via environment variable tanpa rebuild.
+
+================================================================
+I. ALUR KERJA LENGKAP
+================================================================
+
+---- ALUR FOTOGRAFER ----
+1. Login di http://localhost:3000
+2. Klik "Sesi Baru" -> isi nama sesi, nama klien, pilih mode seleksi klien
+   (Pilih Sendiri / Sudah Dipilihkan / Lihat-Lihat)
+   Backend otomatis membuat bucket MinIO dengan nama unik
+3. Masuk ke halaman detail sesi
+4. Klik "Unggah Foto" -> drag & drop file gambar
+   - Foto tersimpan ke MinIO
+   - Metadata tersimpan ke PostgreSQL
+   - Fire-and-forget request dikirim ke Quality Service
+5. Panel AI Culling menampilkan progress bar realtime (polling 6 detik)
+   Setelah selesai tampil: jumlah Buram, Mata Tertutup, Mirip
+6. Mode seleksi fotografer:
+   - Aktifkan "Mode Pilih" -> klik foto untuk siklus status
+     (Belum Ditinjau -> Siap Edit -> Revisi -> Ditolak -> dst)
+   - Atau klik "Tandai X Foto Bermasalah sebagai Revisi" (auto dari AI)
+7. Klik "Salin Tautan Klien" -> kirim ke klien
+8. Dashboard: lihat statistik, filter kualitas, unduh seleksi JSON
+
+---- ALUR KLIEN ----
+1. Buka tautan /k/:token (tidak perlu login)
+2. Halaman Landing -> pilih salah satu mode:
+   a. Pilih Sendiri   : tinjau semua foto, beri status + catatan
+   b. Sudah Dipilihkan: lihat pilihan fotografer, Setuju / Minta Revisi
+   c. Lihat-Lihat     : galeri read-only, tidak bisa memilih
+3. Galeri foto dengan:
+   - Thumbnail WebP berwater mark
+   - Badge status seleksi (Belum Ditinjau / Siap Edit / Revisi / Ditolak)
+   - Badge kualitas AI (Buram / Mata Tertutup / Mirip)
+   - Progress bar seleksi (mode Pilih Sendiri)
+4. Klik foto -> halaman detail:
+   - Preview medium (900px) dengan watermark
+   - Navigasi Sebelumnya / Berikutnya
+   - Panel Info Kualitas (jika ada masalah terdeteksi)
+   - Pilih status + catatan -> "Simpan & Lanjut"
+5. Banner download muncul otomatis jika ada foto Siap Edit
+   -> Tombol "Unduh Semua Siap Edit" -> presigned URL MinIO (15 menit)
+
+================================================================
+J. ENVIRONMENT VARIABLES
+================================================================
+Semua konfigurasi ada di file .env (salin dari .env.example)
+
+# Node Environment
+NODE_ENV=development
+
+# PostgreSQL
+POSTGRES_DB=cfc-foto
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=irsandoni123
+DATABASE_URL=postgresql://postgres:irsandoni123@localhost:5432/cfc-foto
+
+# MinIO Object Storage
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin123
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_USE_SSL=false
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123
+
+# Backend API
+JWT_SECRET=CFC (Culling Foto Creative)_jwt_secret_dev_2024
+JWT_EXPIRES_IN=7d
+CORS_ORIGIN=http://localhost:3000
+PORT=4000
+
+# Image Proxy
+WATERMARK_TEXT=© CFC (Culling Foto Creative)
+PROXY_SECRET=CFC (Culling Foto Creative)_proxy_secret_dev
+
+# Photo Quality Service (threshold bisa di-tune)
+BLUR_THRESHOLD=100       # Laplacian variance threshold
+EAR_THRESHOLD=0.21       # Eye Aspect Ratio threshold
+HAMMING_THRESHOLD=5      # pHash Hamming distance threshold
+PHOTO_QUALITY_URL=http://localhost:6000
+
+# Frontend (Vite)
+VITE_API_URL=/api        # Relatif -> Vite dev proxy handle
+VITE_PROXY_URL=          # Kosong -> Vite dev proxy handle
+
+================================================================
+K. CARA MENJALANKAN (DEVELOPMENT LOKAL)
+================================================================
+
+Prasyarat:
+  - Node.js >= 20
+  - PostgreSQL (sudah ada di laptop, port 5432)
+  - Python 3.11 (via winget install Python.Python.3.11)
+  - MinIO (via winget install MinIO.Server)
+
+Langkah pertama kali:
+  1. cd c:\laragon\www\cfc-foto
+  2. Salin .env.example -> .env, sesuaikan password
+  3. Install dependencies backend:
+       cd backend && npm install
+  4. Install dependencies image-proxy:
+       cd image-proxy && npm install
+  5. Install dependencies frontend:
+       cd frontend && npm install
+  6. Setup Python venv untuk quality service:
+       cd photo-quality-service
+       python -m venv venv --upgrade-deps
+       .\venv\Scripts\python.exe -m pip install -r requirements.txt
+  7. Buat database dan jalankan schema:
+       $env:PGPASSWORD="irsandoni123"
+       psql -U postgres -h localhost -p 5432 -c "CREATE DATABASE cfc-foto;"
+       psql -U postgres -h localhost -p 5432 -d cfc-foto -f database\init.sql
+       psql -U postgres -h localhost -p 5432 -d cfc-foto -f database\migrate_quality.sql
+       psql -U postgres -h localhost -p 5432 -d cfc-foto -f database\migrate_mode_seleksi.sql
+
+Menjalankan (setiap kali):
+  .\start-dev.ps1
+
+Atau manual (4 terminal terpisah):
+  Terminal 1: minio.exe server C:\minio\data --console-address :9001
+  Terminal 2: cd backend && npm run dev
+  Terminal 3: cd image-proxy && npm run dev
+  Terminal 4: cd photo-quality-service && .\venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 6000
+  Terminal 5: cd frontend && npm run dev
+
+Menjalankan dengan Docker:
+  docker compose up --build
+
+================================================================
+L. URL AKSES APLIKASI
+================================================================
+  Frontend (React)       : http://localhost:3000
+  Backend API            : http://localhost:4000
+  Image Proxy            : http://localhost:5000
+  Photo Quality Service  : http://localhost:6000
+  MinIO Console          : http://localhost:9001
+  MinIO S3 API           : http://localhost:9000
+
+  Login Demo Fotografer  : fotografer@demo.com / password123
+
+  URL Klien contoh       : http://localhost:3000/k/<token_akses>
+
+================================================================
+M. FILE PENTING UNTUK DEPLOYMENT PRODUKSI
+================================================================
+  1. docker-compose.yml        <- Edit env vars untuk production
+  2. .env                      <- Ganti semua password & secret
+  3. frontend/Dockerfile       <- Multi-stage build, stage production = Nginx
+  4. frontend/nginx.conf       <- SPA fallback config
+  5. backend/Dockerfile        <- Non-root user, NODE_ENV=production
+  6. image-proxy/Dockerfile    <- Non-root user
+  7. photo-quality-service/Dockerfile <- Python 3.11 slim
+
+Hal yang WAJIB diubah sebelum produksi:
+  - JWT_SECRET (minimal 32 karakter acak)
+  - POSTGRES_PASSWORD (password kuat)
+  - MINIO_ROOT_PASSWORD (password kuat)
+  - PROXY_SECRET
+  - CORS_ORIGIN (domain frontend yang sebenarnya)
+  - WATERMARK_TEXT (nama studio/fotografer)
+
+================================================================
+N. RINGKASAN FILE YANG DIBUAT SELAMA DEVELOPMENT
+================================================================
+
+Backend (11 file):
+  src/index.js
+  src/config/db.js
+  src/config/minio.js
+  src/middleware/auth.js
+  src/middleware/errorHandler.js
+  src/routes/authRoutes.js
+  src/routes/sesiRoutes.js
+  src/routes/klienRoutes.js
+  src/controllers/authController.js
+  src/controllers/sesiController.js
+  src/controllers/fotoController.js
+  src/controllers/qualityController.js
+  src/controllers/downloadController.js
+  src/services/qualityWebhook.js
+
+Image Proxy (4 file):
+  src/index.js
+  src/proxyHandler.js
+  src/watermark.js
+  src/config/minio.js
+
+Photo Quality Service (8 file):
+  app/main.py
+  app/core/config.py
+  app/core/database.py
+  app/core/minio_client.py
+  app/analyzers/image_utils.py
+  app/analyzers/blur_detector.py
+  app/analyzers/eyes_detector.py
+  app/analyzers/duplicate_detector.py
+
+Frontend (17 file):
+  src/main.jsx
+  src/App.jsx
+  src/index.css
+  src/store/authStore.js
+  src/services/api.js
+  src/services/proxyUrl.js
+  src/pages/LoginPage.jsx
+  src/pages/DashboardPage.jsx
+  src/pages/SesiDetailPage.jsx
+  src/pages/UploadPage.jsx
+  src/pages/KlienLanding.jsx
+  src/pages/KlienPage.jsx
+  src/pages/KlienFotoDetail.jsx
+  src/components/common/Navbar.jsx
+  src/components/common/StatusBadge.jsx
+  src/components/common/QualityBadges.jsx
+  src/components/common/Spinner.jsx
+  src/components/photographer/UploadZone.jsx
+  src/components/photographer/AiCullingPanel.jsx
+
+Database (3 file):
+  database/init.sql
+  database/migrate_quality.sql
+  database/migrate_mode_seleksi.sql
+
+Konfigurasi (7 file):
+  docker-compose.yml
+  .env / .env.example
+  .gitignore
+  start-dev.ps1
+  frontend/vite.config.js
+  frontend/tailwind.config.js
+  frontend/nginx.conf (untuk production build)
+
+================================================================
+TOTAL: ~70 file dibuat dari awal
+================================================================

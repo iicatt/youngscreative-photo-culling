@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YoungCreative - Client Gallery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#00323e",
+                        "surface-container-highest": "#353534",
+                        "primary": "#ffb59c",
+                        "success": "#4CAF50",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#001f27",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#5c1900",
+                        "on-secondary-fixed-variant": "#584323",
+                        "surface-dim": "#131313",
+                        "on-primary-fixed": "#390c00",
+                        "on-primary-fixed-variant": "#832700",
+                        "on-tertiary-fixed-variant": "#004e5f",
+                        "on-surface-variant": "#e0c0b6",
+                        "outline-variant": "#58413a",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-on-surface": "#313030",
+                        "secondary-container": "#584323",
+                        "on-error": "#690005",
+                        "primary-fixed": "#ffdbd0",
+                        "secondary-fixed-dim": "#e0c298",
+                        "surface-tint": "#ffb59c",
+                        "surface-light": "#FFFFFF",
+                        "surface-bright": "#393939",
+                        "on-primary-container": "#571700",
+                        "on-surface": "#e5e2e1",
+                        "border-dark": "#333333",
+                        "surface-container": "#201f1f",
+                        "surface-variant": "#353534",
+                        "tertiary-fixed-dim": "#5dd5f8",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#281800",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary": "#003642",
+                        "secondary": "#e0c298",
+                        "on-secondary-container": "#ceb188",
+                        "tertiary": "#5dd5f8",
+                        "inverse-primary": "#a93705",
+                        "inverse-surface": "#e5e2e1",
+                        "text-muted": "#9CA3AF",
+                        "on-secondary": "#402d0f",
+                        "primary-container": "#f26b3a",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-fixed": "#b3ebff",
+                        "error": "#ffb4ab",
+                        "surface-dark": "#242424",
+                        "tertiary-container": "#00a2c3",
+                        "background": "#131313",
+                        "secondary-fixed": "#fedeb2",
+                        "primary-fixed-dim": "#ffb59c",
+                        "text-primary": "#F3F4F6",
+                        "on-background": "#e5e2e1",
+                        "outline": "#a78a81"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-1": "0.25rem",
+                        "gutter": "1px",
+                        "bento-gap": "12px",
+                        "margin-mobile": "16px",
+                        "unit-2": "0.5rem",
+                        "margin-desktop": "24px",
+                        "unit-4": "1rem",
+                        "unit-8": "2rem",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Inter"],
+                        "mono-label": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "mono-label": ["11px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .bento-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+        .bento-item {
+            border: 1px solid theme('colors.border-dark');
+            background-color: theme('colors.surface-dark');
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            pointer-events: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md text-body-md antialiased selection:bg-primary-container selection:text-white">
+<!-- TopNavBar Shell -->
+<nav class="bg-surface dark:bg-surface border-b border-border-dark flex justify-between items-center w-full px-margin-desktop h-16 shrink-0 sticky top-0 z-50">
+<div class="flex items-center gap-unit-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">YoungCreative</span>
+<div class="hidden md:flex gap-unit-4">
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors py-unit-2" href="#">Gallery</a>
+<a class="text-primary border-b-2 border-primary pb-unit-1 font-label-sm text-label-sm hover:text-primary transition-colors py-unit-2" href="#">Selection</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors py-unit-2" href="#">Download</a>
+</div>
+</div>
+<div class="flex items-center gap-unit-4">
+<span class="font-mono-label text-mono-label text-on-surface-variant border border-border-dark px-unit-2 py-unit-1 rounded-sm">Selected: 12/50</span>
+<button class="bg-primary-container text-white font-label-sm text-label-sm px-unit-4 py-unit-2 rounded flex items-center gap-unit-2 hover:bg-inverse-primary transition-colors">
+<span>Download All</span>
+<span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+<div class="flex gap-unit-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 active:opacity-100"><span class="material-symbols-outlined">notifications</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 active:opacity-100"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-border-dark object-cover ml-unit-2" data-alt="A small, circular avatar portrait of a professional photographer with a minimal dark aesthetic. Moody lighting, cinematic contrast, 1px grey border." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-pI1F4-wt3sY94zM5nWMeZj1YrNc8ssVv8F9iCN8KhvxRl9V9sxxcDTA6WlaMqEzQHuA5NZmj5quddXHUYRivH27vHZ7blIE4FXaMbwAq6IGTsd1-rh4t2hHu3AYhbtn9WwdpVK1Mw_S_yd3_NjGhMc6dObBm0pZecu7u2HY_YVJrTa8Al46DbCMZYTGK1WolzrG8rRg1AA1C-ryA0MeMv0bKX9SMtGak8K5T5accVlXnU-ymEBCu"/>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 w-full px-margin-desktop py-margin-desktop flex flex-col gap-bento-gap">
+<!-- Filter Bar -->
+<div class="flex justify-between items-center mb-unit-4">
+<div class="flex gap-unit-2">
+<button class="bg-surface-bright border border-border-dark text-text-primary px-unit-4 py-unit-2 rounded-sm font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">All (50)</button>
+<button class="bg-transparent border border-primary text-primary px-unit-4 py-unit-2 rounded-sm font-label-sm text-label-sm hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-success"></span> Selected (12)
+                </button>
+<button class="bg-transparent border border-border-dark text-on-surface-variant px-unit-4 py-unit-2 rounded-sm font-label-sm text-label-sm hover:bg-surface-container-low transition-colors">Unseen (38)</button>
+</div>
+<div class="flex gap-unit-2 items-center">
+<span class="text-on-surface-variant font-mono-label text-mono-label mr-2">Sort by</span>
+<select class="bg-surface-dark border border-border-dark text-on-surface text-label-sm font-label-sm py-unit-1 px-unit-2 rounded-sm focus:border-primary-container focus:ring-0">
+<option>Capture Time</option>
+<option>Filename</option>
+<option>Selection Status</option>
+</select>
+</div>
+</div>
+<!-- Gallery Grid -->
+<div class="bento-grid">
+<!-- Photo Card 1 (Selected) -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-3 bento-item group relative overflow-hidden flex flex-col h-64 hover:border-primary-container transition-colors duration-300">
+<div class="relative flex-1 bg-surface-container-lowest">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" data-alt="High-end editorial fashion photography, cinematic lighting, dark background, sharp contrast, subject wearing avant-garde clothing, dramatic shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXQqV72uXRxdQeUx4L0zBUyjmOQSb1LSG7O6Ey2pMuLrRzUGdZD2a0stF6gz9zpF-b96rNgZ5ggXvjXMMfjyIXvnwTEP22jjrj-X4nFvX25LjTlkmQv7L5RSagnC4nDOxVu4IsBrIPoK9bgnh1PuCA_XwjAxVM1p9Mc14J67hUUgtPNRPxlCNZzws173y-Lq2L5boYpjCc5TheIUGHmd4u1W00d5fbAlIPppP7YdUJd0cqjIGG0JzJ"/>
+<div class="watermark font-headline-md text-headline-md">YoungCreative</div>
+<div class="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border border-border-dark rounded-full w-6 h-6 flex items-center justify-center cursor-pointer">
+<div class="w-2.5 h-2.5 rounded-full bg-success shadow-[0_0_8px_rgba(76,175,80,0.6)]"></div>
+</div>
+</div>
+<div class="p-unit-2 border-t border-border-dark flex justify-between items-center bg-surface-dark">
+<span class="font-mono-label text-mono-label text-on-surface-variant">YC_0042.RAW</span>
+<button class="text-text-muted hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span></button>
+</div>
+</div>
+<!-- Photo Card 2 (Unseen) -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-3 bento-item group relative overflow-hidden flex flex-col h-64 hover:border-primary-container transition-colors duration-300">
+<div class="relative flex-1 bg-surface-container-lowest">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" data-alt="Moody architectural photography of a brutalist building at dusk. Sharp lines, concrete textures, cinematic dark tones with a hint of warm ambient light from windows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWiDcQ-lqFjPNCc4buXbrDyG5sRmDrEcdjkZaOEWSXBbQgYSVmaTrRAcBA2nJyFNsGfFM5N4L_bICHiheYg7jMEwaG9-CElA5_J3gbZX4AZ1ZIqABsmn_a1kqYwfDwoCcokPYKsdMhABnMuBW61eI56CAuNeTjT8pjMUPIMmm-qjoto_FoaqYdFxC1aHNWNh_JJBRYP6CRbIfHeFongMhz7bNR744lozTCrLByXY8nB32Vap-F6Jj2"/>
+<div class="watermark font-headline-md text-headline-md">YoungCreative</div>
+<div class="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border border-border-dark rounded-full w-6 h-6 flex items-center justify-center cursor-pointer">
+<div class="w-2.5 h-2.5 rounded-full bg-surface-bright"></div>
+</div>
+</div>
+<div class="p-unit-2 border-t border-border-dark flex justify-between items-center bg-surface-dark">
+<span class="font-mono-label text-mono-label text-on-surface-variant">YC_0043.RAW</span>
+<button class="text-text-muted hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span></button>
+</div>
+</div>
+<!-- Photo Card 3 (Unseen) -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-3 bento-item group relative overflow-hidden flex flex-col h-64 hover:border-primary-container transition-colors duration-300">
+<div class="relative flex-1 bg-surface-container-lowest">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" data-alt="Close up macro shot of a sleek sports car engine component, dark metallic textures, precision engineering, dramatic studio lighting highlighting edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6YD1fYUhvmxytODS6bh_eQ8rPPupdsgR5MAmCAIjzVBgwYK4HOvhSlTeMSvx_WyQJlIt9AMiRtYE6ktpTP_STG3dbwoaYMVPY9FiFn4886LjzuSFo5UQdM5FG_AA5J4hA0BXbVqstDuNw8rCpBktH8Tl11yvUCSObFw0ZhDP5Zmznd39NsZQmiHAt7xz9mXAlfb73YEwKbicU6mkX_UW2Ljxa9Tn7sS2ebMWYiHon-ayFOu_mqkys"/>
+<div class="watermark font-headline-md text-headline-md">YoungCreative</div>
+<div class="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border border-border-dark rounded-full w-6 h-6 flex items-center justify-center cursor-pointer">
+<div class="w-2.5 h-2.5 rounded-full bg-surface-bright"></div>
+</div>
+</div>
+<div class="p-unit-2 border-t border-border-dark flex justify-between items-center bg-surface-dark">
+<span class="font-mono-label text-mono-label text-on-surface-variant">YC_0044.RAW</span>
+<button class="text-text-muted hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span></button>
+</div>
+</div>
+<!-- Photo Card 4 (Selected) -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-3 bento-item group relative overflow-hidden flex flex-col h-64 hover:border-primary-container transition-colors duration-300">
+<div class="relative flex-1 bg-surface-container-lowest">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" data-alt="Cinematic portrait of a musician holding a cello in a dimly lit, smoky jazz club. Spotlight on the instrument, deep rich shadows, professional grade." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZET5-w_oZDwzQ4XUJ1DGKi99GtJ_tAh0MgyizvYDGTveIUyGrBHb4gY0cQXHj2Ji3JI3TNyZH-yDl69byYv5_-YEDdLbqPHuuEscUNFjf2OGsPikwe4i7OMhuPIj1rSU-ebglJrHZw3qb-6esbLobXpbc1qQlyCQ0isXZ8vcu3M24iscSZdoRB73mbswLvQnHnFVZONWnhhP4ZqG4IpnPhrZsuHr9svs1LodKVIDEyfdL8q5WQwTX"/>
+<div class="watermark font-headline-md text-headline-md">YoungCreative</div>
+<div class="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border border-border-dark rounded-full w-6 h-6 flex items-center justify-center cursor-pointer">
+<div class="w-2.5 h-2.5 rounded-full bg-success shadow-[0_0_8px_rgba(76,175,80,0.6)]"></div>
+</div>
+</div>
+<div class="p-unit-2 border-t border-border-dark flex justify-between items-center bg-surface-dark">
+<span class="font-mono-label text-mono-label text-on-surface-variant">YC_0045.RAW</span>
+<button class="text-text-muted hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">favorite</span></button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

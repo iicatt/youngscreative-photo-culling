@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ─────────────────────────────────────────────────── */
+@layer base {
+  body {
+    background-color: #131313;
+    color: #F3F4F6;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar — utilitarian dark */
+  ::-webkit-scrollbar         { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track   { background: #131313; }
+  ::-webkit-scrollbar-thumb   { background: #333333; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #f26b3a; }
+
+  ::selection { background-color: #f26b3a; color: #fff; }
+}
+
+/* ── Components ───────────────────────────────────────────── */
+@layer components {
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center gap-2
+           bg-primary-container text-white
+           font-label-sm text-label-sm uppercase tracking-wider
+           px-4 py-2.5 rounded
+           hover:bg-inverse-primary active:scale-[0.98]
+           transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2
+           bg-transparent border border-border-dark text-text-primary
+           font-label-sm text-label-sm uppercase tracking-wider
+           px-4 py-2.5 rounded
+           hover:bg-surface-container-high active:scale-[0.98]
+           transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2
+           bg-transparent text-text-muted
+           font-label-sm text-label-sm
+           px-3 py-2 rounded
+           hover:bg-surface-container hover:text-text-primary
+           transition-all duration-150;
+  }
+
+  /* ── Input fields ────────────────────────────────────────── */
+  .input {
+    @apply w-full bg-[#1a1a1a] border border-border-dark
+           text-text-primary font-body-md text-body-md
+           rounded px-3 py-2
+           focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container
+           placeholder:text-text-muted/50
+           transition-colors;
+  }
+
+  /* ── Bento cell ──────────────────────────────────────────── */
+  .card {
+    @apply bg-surface-dark border border-border-dark rounded;
+  }
+  .card-hover {
+    @apply card hover:border-primary-container transition-colors;
+  }
+
+  /* ── Chip / Tag ──────────────────────────────────────────── */
+  .chip {
+    @apply inline-block bg-[#333333] text-text-primary
+           border border-border-dark rounded-[2px]
+           px-2 py-0.5
+           font-mono-label text-mono-label uppercase tracking-widest;
+  }
+  .chip-orange {
+    @apply bg-primary-container/20 text-primary-container border-primary-container/30;
+  }
+  .chip-green {
+    @apply bg-success/20 text-success border-success/30;
+  }
+  .chip-error {
+    @apply bg-error-container/20 text-error border-error/30;
+  }
+  .chip-yellow {
+    @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
+  }
+  .chip-purple {
+    @apply bg-purple-500/20 text-purple-400 border-purple-500/30;
+  }
+
+  /* ── Ambient glow (modal/form containers) ────────────────── */
+  .ambient-glow {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  /* ── Subtle grid overlay ─────────────────────────────────── */
+  .grid-overlay {
+    background-image: linear-gradient(to right, #333333 1px, transparent 1px),
+                      linear-gradient(to bottom, #333333 1px, transparent 1px);
+    background-size: 4rem 4rem;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 10%, transparent 100%);
+    opacity: 0.12;
+  }
+}
