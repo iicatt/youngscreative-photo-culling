@@ -115,7 +115,8 @@ async function proxyHandler(req, res) {
     res.send(finalBuf);
 
   } catch (err) {
-    console.error('[Proxy] Error:', err.message);
+    const msg = err?.message || err?.code || JSON.stringify(err) || 'Unknown error';
+    console.error('[Proxy] Error:', msg, '| bucket:', bucket, '| key:', objectKey);
     res.status(500).json({ error: 'Gagal memproses gambar.' });
   }
 }
