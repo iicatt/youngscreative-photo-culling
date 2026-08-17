@@ -348,7 +348,10 @@ NGINX_CONF
 ln -sf /etc/nginx/sites-available/youngscreative /etc/nginx/sites-enabled/youngscreative
 rm -f /etc/nginx/sites-enabled/default
 
-nginx -t && systemctl reload nginx
+nginx -t || err "Nginx config error — cek output di atas"
+systemctl enable nginx
+systemctl start nginx 2>/dev/null || true
+systemctl reload nginx 2>/dev/null || systemctl restart nginx
 log "Nginx reverse proxy dikonfigurasi"
 
 # ── 9. Update .env untuk single-origin via Nginx ─────────────
