@@ -69,6 +69,7 @@ function NewSesiModal({ onClose, onCreated }) {
 }
 
 export default function DashboardPage() {
+  const navigate          = useNavigate();
   const queryClient       = useQueryClient();
   const [showModal, setShowModal] = useState(false);
 
