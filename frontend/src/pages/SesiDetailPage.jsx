@@ -158,7 +158,7 @@ export default function SesiDetailPage() {
   if (loadingSesi) return (
     <div className="min-h-screen bg-background flex">
       <Navbar />
-      <div className="flex-1 md:ml-64 flex items-center justify-center">
+      <div className="flex-1 md:ml-64 flex items-center justify-center pt-14 md:pt-0">
         <Spinner size={32} />
       </div>
     </div>
@@ -170,28 +170,22 @@ export default function SesiDetailPage() {
 
       <main className="flex-1 md:ml-64 flex flex-col">
 
-        {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 h-14
-                           border-b border-border-dark bg-surface sticky top-0 z-10">
-          <span className="text-headline-lg-mobile font-headline-lg-mobile text-primary">CFC</span>
-        </header>
-
         {/* Top bar */}
-        <div className="border-b border-border-dark bg-surface px-4 md:px-6 h-16
-                        flex items-center justify-between sticky top-0 md:top-0 z-30">
+        <div className="border-b border-border-dark bg-surface px-4 md:px-6 h-14 md:h-16
+                        flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <Link to="/" className="text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined" style={{fontSize:18}}>arrow_back</span>
+            <Link to="/" className="text-on-surface-variant hover:text-primary transition-colors p-2 -m-2">
+              <span className="material-symbols-outlined" style={{fontSize:20}}>arrow_back</span>
             </Link>
             <div>
-              <h1 className="text-headline-md font-headline-md text-text-primary leading-tight">
+              <h1 className="text-body-md md:text-headline-md font-headline-md text-text-primary leading-tight truncate">
                 {sesi?.nama_sesi}
               </h1>
               <div className="flex items-center gap-2">
                 {sesi?.status_sesi === 'aktif' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse" />
                 )}
-                <span className="text-mono-label font-mono-label text-on-surface-variant">
+                <span className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant">
                   {sesi?.status_sesi === 'aktif' ? 'Active' : 'Closed'} · {sesi?.nama_klien}
                 </span>
               </div>

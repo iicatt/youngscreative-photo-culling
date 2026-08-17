@@ -24,15 +24,11 @@ export default function UploadPage() {
       <Navbar />
       <main className="flex-1 md:ml-64 flex flex-col">
 
-        <header className="md:hidden flex items-center px-4 h-14 border-b border-border-dark bg-surface">
-          <span className="text-headline-lg-mobile font-headline-lg-mobile text-primary">CFC</span>
-        </header>
-
-        <div className="border-b border-border-dark bg-surface px-4 md:px-6 h-16
+        <div className="border-b border-border-dark bg-surface px-4 md:px-6 h-14 md:h-16
                         flex items-center gap-3 sticky top-0 z-30">
           <Link to={`/sesi/${sesiId}`}
-            className="text-on-surface-variant hover:text-primary transition-colors">
-            <span className="material-symbols-outlined" style={{fontSize:18}}>arrow_back</span>
+            className="text-on-surface-variant hover:text-primary transition-colors p-2 -m-2">
+            <span className="material-symbols-outlined" style={{fontSize:20}}>arrow_back</span>
           </Link>
           <div>
             <h1 className="text-headline-md font-headline-md text-text-primary leading-tight">

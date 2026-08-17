@@ -1,15 +1,10 @@
 ﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import Navbar from '../components/common/Navbar';
 import Spinner from '../components/common/Spinner';
 import api from '../services/api';
-
-const MODE_OPTIONS = [
-  { value: 'pilih_sendiri',   label: 'Client Chooses',  desc: 'Client reviews and selects photos.' },
-  { value: 'oleh_fotografer', label: 'Pre-selected',    desc: 'Photographer picks, client approves.' },
-  { value: 'lihat_saja',      label: 'View Only',       desc: 'Gallery read-only, no selection.' },
-];
 
 function NewSesiModal({ onClose, onCreated }) {
   const [namaSesi,  setNamaSesi]  = useState('');
