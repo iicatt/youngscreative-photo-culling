@@ -113,27 +113,30 @@ export default function KlienLanding() {
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-background flex justify-center items-center py-8">
-      <main className="w-full max-w-6xl px-4 md:px-6">
+    <div className="min-h-screen bg-background flex justify-center items-center py-6 md:py-8 px-4">
+      <main className="w-full max-w-6xl">
 
         {/* Header */}
-        <header className="mb-10 md:mb-12">
-          <div className="flex items-center gap-2 mb-4">
+        <header className="mb-8 md:mb-10">
+          <div className="flex items-center gap-2 mb-3 md:mb-4 flex-wrap">
             <span className="material-symbols-outlined text-primary-container"
-                  style={{fontSize:18}}>photo_camera</span>
-            <span className="text-mono-label font-mono-label text-on-surface-variant uppercase tracking-widest">
+                  style={{fontSize:16, md:18}}>photo_camera</span>
+            <span className="text-[10px] md:text-mono-label font-mono-label text-on-surface-variant 
+                           uppercase tracking-widest">
               CFC — Culling Foto Creative
             </span>
             {/* Fase badge */}
             {isPraEdit && (
-              <span className="chip chip-orange ml-2">Pra-Edit</span>
+              <span className="chip chip-orange text-[10px] md:text-xs px-1.5 md:px-2 py-0.5">
+                Pra-Edit
+              </span>
             )}
           </div>
-          <h1 className="text-headline-lg-mobile md:text-display-lg font-display-lg
+          <h1 className="text-headline-md md:text-display-lg font-display-lg
                          text-surface-light tracking-tight mb-2">
             Halo, {sesi.nama_klien}
           </h1>
-          <p className="text-body-lg font-body-lg text-text-muted max-w-2xl">
+          <p className="text-body-sm md:text-body-lg font-body-lg text-text-muted max-w-2xl">
             Koleksi momen Anda untuk sesi{' '}
             <strong className="text-on-surface-variant">{sesi.nama_sesi}</strong> telah siap.
             {isPraEdit
@@ -143,22 +146,22 @@ export default function KlienLanding() {
 
           {/* Progress ringkasan */}
           {totalFoto > 0 && (
-            <div className="mt-4 flex items-center gap-3 flex-wrap">
-              <span className="text-mono-label font-mono-label text-on-surface-variant">
+            <div className="mt-3 md:mt-4 flex items-center gap-3 flex-wrap">
+              <span className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant">
                 {totalFoto} foto
               </span>
               {sudah > 0 && (
                 <>
                   <span className="text-border-dark">·</span>
-                  <span className="text-mono-label font-mono-label text-on-surface-variant">
+                  <span className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant">
                     {sudah} ditinjau
                   </span>
                   <div className="flex items-center gap-2">
-                    <div className="w-24 h-px bg-border-dark relative">
+                    <div className="w-20 md:w-24 h-px bg-border-dark relative">
                       <div className="absolute left-0 top-0 h-full bg-primary-container"
                            style={{ width: `${Math.round(sudah/totalFoto*100)}%` }} />
                     </div>
-                    <span className="text-mono-label font-mono-label text-primary-container">
+                    <span className="text-[11px] md:text-mono-label font-mono-label text-primary-container">
                       {Math.round(sudah/totalFoto*100)}%
                     </span>
                   </div>
@@ -169,10 +172,10 @@ export default function KlienLanding() {
 
           {/* Info pra_edit: download dinonaktifkan */}
           {isPraEdit && (
-            <div className="mt-4 card p-3 flex items-center gap-2 border-outline-variant max-w-xl">
+            <div className="mt-3 md:mt-4 card p-3 flex items-start gap-2 border-outline-variant max-w-xl">
               <span className="material-symbols-outlined text-on-surface-variant shrink-0"
                     style={{fontSize:16}}>info</span>
-              <p className="text-mono-label font-mono-label text-on-surface-variant">
+              <p className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant">
                 Fase Pra-Edit — Anda hanya dapat meninjau dan memilih foto.
                 Unduhan foto asli akan tersedia setelah fotografer selesai mengedit.
               </p>
@@ -182,9 +185,9 @@ export default function KlienLanding() {
 
         {/* Mode cards grid */}
         {saving ? (
-          <div className="flex flex-col items-center gap-4 py-16">
+          <div className="flex flex-col items-center gap-4 py-12 md:py-16">
             <Spinner size={36} />
-            <p className="text-body-md font-body-md text-on-surface-variant">
+            <p className="text-body-sm md:text-body-md font-body-md text-on-surface-variant">
               Menyimpan pilihan…
             </p>
           </div>
@@ -194,29 +197,34 @@ export default function KlienLanding() {
               <button key={m.key} onClick={() => pilih(m.key)}
                 className={`${m.span} group relative overflow-hidden rounded border border-border-dark
                              bg-surface-dark transition-all duration-300 hover:border-primary-container
-                             cursor-pointer ${m.minH} flex flex-col justify-end text-left`}>
+                             cursor-pointer ${m.minH} flex flex-col justify-end text-left
+                             active:scale-[0.98]`}>
                 <div className={`absolute inset-0 bg-gradient-to-br ${m.grad} via-surface-dark
                                  to-surface-dark opacity-60 group-hover:opacity-80 transition-opacity`} />
                 <div className="absolute inset-0 grid-overlay" />
-                <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row
+                <div className="relative z-10 p-5 md:p-8 flex flex-col md:flex-row
                                 md:items-end justify-between gap-4">
                   <div className="max-w-xl">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`material-symbols-outlined ${m.tagCls}`}
-                            style={{fontSize:16}}>{m.icon}</span>
-                      <span className={`text-mono-label font-mono-label uppercase tracking-widest ${m.tagCls}`}>
+                            style={{fontSize:14, md:16}}>{m.icon}</span>
+                      <span className={`text-[10px] md:text-mono-label font-mono-label uppercase 
+                                      tracking-widest ${m.tagCls}`}>
                         {m.tag}
                       </span>
                     </div>
-                    <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg
+                    <h2 className="text-headline-sm md:text-headline-lg font-headline-lg
                                    text-surface-light mb-2 group-hover:text-primary transition-colors">
                       {m.label}
                     </h2>
-                    <p className="text-body-md font-body-md text-on-surface-variant">{m.desc}</p>
+                    <p className="text-body-sm md:text-body-md font-body-md text-on-surface-variant">
+                      {m.desc}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 rounded-full border border-border-dark flex items-center
-                                  justify-center bg-surface/50 group-hover:bg-primary-container
-                                  group-hover:border-primary-container transition-all shrink-0">
+                  <div className="w-10 h-10 md:w-10 md:h-10 rounded-full border border-border-dark 
+                                  flex items-center justify-center bg-surface/50 
+                                  group-hover:bg-primary-container group-hover:border-primary-container 
+                                  transition-all shrink-0">
                     <span className="material-symbols-outlined text-surface-light"
                           style={{fontSize:18}}>arrow_forward</span>
                   </div>
@@ -226,7 +234,7 @@ export default function KlienLanding() {
           </div>
         )}
 
-        <p className="text-center text-mono-label font-mono-label text-text-muted/50 mt-8">
+        <p className="text-center text-[11px] md:text-mono-label font-mono-label text-text-muted/50 mt-6 md:mt-8">
           Pilihan mode bersifat permanen untuk sesi ini.
         </p>
       </main>

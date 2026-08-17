@@ -30,7 +30,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden p-4">
 
       {/* Grid overlay */}
       <div className="absolute inset-0 pointer-events-none grid-overlay" />
@@ -40,25 +40,26 @@ export default function LoginPage() {
                       bg-primary-container/10 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Login bento cell */}
-      <main className="relative z-10 w-full max-w-md px-4 md:px-0">
-        <div className="card ambient-glow p-8 flex flex-col gap-8">
+      <main className="relative z-10 w-full max-w-md">
+        <div className="card ambient-glow p-6 md:p-8 flex flex-col gap-6 md:gap-8">
 
           {/* Brand */}
           <div className="text-center flex flex-col gap-2">
-            <h1 className="text-headline-lg font-headline-lg text-primary-fixed-dim tracking-tight">
+            <h1 className="text-display-sm md:text-headline-lg font-headline-lg text-primary-fixed-dim tracking-tight">
               CFC
             </h1>
-            <p className="text-mono-label font-mono-label text-text-muted uppercase tracking-widest">
+            <p className="text-[10px] md:text-mono-label font-mono-label text-text-muted uppercase tracking-widest">
               Culling Foto Creative · Pro Workspace
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-4">
 
             {/* Email */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-label-sm font-label-sm text-text-muted uppercase" htmlFor="email">
+              <label className="text-label-sm font-label-sm text-text-muted uppercase text-xs md:text-[11px]" 
+                     htmlFor="email">
                 Email Address
               </label>
               <div className="relative">
@@ -66,7 +67,7 @@ export default function LoginPage() {
                                  text-text-muted pointer-events-none" style={{fontSize:18}}>mail</span>
                 <input
                   id="email" type="email" required
-                  className="input pl-10"
+                  className="input pl-10 h-12 md:h-auto text-base md:text-sm"
                   placeholder="photographer@studio.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -78,11 +79,13 @@ export default function LoginPage() {
             {/* Password */}
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-label-sm font-label-sm text-text-muted uppercase" htmlFor="password">
+                <label className="text-label-sm font-label-sm text-text-muted uppercase text-xs md:text-[11px]" 
+                       htmlFor="password">
                   Password
                 </label>
-                <button type="button" className="text-mono-label font-mono-label text-on-surface-variant
-                                                  hover:text-primary transition-colors">
+                <button type="button" className="text-[11px] md:text-mono-label font-mono-label 
+                                                  text-on-surface-variant hover:text-primary transition-colors
+                                                  py-1 px-2 -mr-2">
                   Forgot?
                 </button>
               </div>
@@ -91,18 +94,19 @@ export default function LoginPage() {
                                  text-text-muted pointer-events-none" style={{fontSize:18}}>lock</span>
                 <input
                   id="password" type={showPw ? 'text' : 'password'} required
-                  className="input pl-10 pr-10"
+                  className="input pl-10 pr-10 h-12 md:h-auto text-base md:text-sm"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                 />
                 <button type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted 
+                             hover:text-text-primary transition-colors p-2 -m-2"
                   onClick={() => setShowPw(!showPw)}
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                 >
-                  <span className="material-symbols-outlined" style={{fontSize:16}}>
+                  <span className="material-symbols-outlined" style={{fontSize:18}}>
                     {showPw ? 'visibility_off' : 'visibility'}
                   </span>
                 </button>
@@ -110,16 +114,18 @@ export default function LoginPage() {
             </div>
 
             {/* Actions */}
-            <div className="mt-4 flex flex-col gap-3">
+            <div className="mt-2 md:mt-4 flex flex-col gap-3">
               <button type="submit" disabled={loading}
-                className="btn-primary w-full justify-center py-3">
+                className="btn-primary w-full justify-center py-4 md:py-3 text-sm md:text-sm
+                           min-h-[52px] md:min-h-0 active:scale-[0.98] transition-transform">
                 {loading ? 'Signing in…' : 'Sign in as Photographer'}
                 {!loading && (
                   <span className="material-symbols-outlined" style={{fontSize:18}}>arrow_forward</span>
                 )}
               </button>
               <button type="button"
-                className="btn-secondary w-full justify-center py-3">
+                className="btn-secondary w-full justify-center py-4 md:py-3 text-sm md:text-sm
+                           min-h-[52px] md:min-h-0 active:scale-[0.98] transition-transform">
                 Request Client Access
               </button>
             </div>
@@ -127,10 +133,10 @@ export default function LoginPage() {
 
           {/* Footer */}
           <div className="text-center border-t border-border-dark pt-4">
-            <p className="text-mono-label font-mono-label text-text-muted">
+            <p className="text-[11px] md:text-mono-label font-mono-label text-text-muted">
               Secured by CFC Core
             </p>
-            <p className="text-mono-label font-mono-label text-text-muted/50 mt-1">
+            <p className="text-[10px] md:text-mono-label font-mono-label text-text-muted/50 mt-1">
               Demo: fotografer@demo.com / password123
             </p>
           </div>

@@ -117,14 +117,7 @@ export default function DashboardPage() {
       {/* Main canvas — offset for sidebar */}
       <main className="flex-1 md:ml-64 flex flex-col">
 
-        {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 h-14
-                           border-b border-border-dark bg-surface sticky top-0 z-10">
-          <span className="text-headline-lg-mobile font-headline-lg-mobile text-primary">CFC</span>
-          <span className="material-symbols-outlined text-text-primary">menu</span>
-        </header>
-
-        <div className="p-4 md:p-6 flex flex-col gap-3 max-w-[1600px] w-full mx-auto">
+        <div className="p-4 md:p-6 flex flex-col gap-3 max-w-[1600px] w-full mx-auto pt-16 md:pt-6">
 
           {/* Page title */}
           <div className="flex justify-between items-end mb-2 mt-1">
@@ -206,54 +199,111 @@ export default function DashboardPage() {
             )}
 
             {!isLoading && sesiList && sesiList.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-border-dark bg-surface">
-                      {['Session Name', 'Client', 'Photos', 'Ready', 'Mode', 'Status', ''].map((h) => (
-                        <th key={h} className="py-2 px-4 text-mono-label font-mono-label
-                                               text-on-surface-variant uppercase tracking-widest">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-dark">
-                    {sesiList.map((sesi) => (
-                      <tr key={sesi.id}
-                        className="hover:bg-surface-container-high transition-colors group cursor-pointer"
-                        onClick={() => navigate(`/sesi/${sesi.id}`)}>
-                        <td className="py-3 px-4">
-                          <span className="text-body-md font-body-md text-text-primary font-medium">
-                            {sesi.nama_sesi}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-mono-label font-mono-label text-on-surface-variant">
-                          {sesi.nama_klien}
-                        </td>
-                        <td className="py-3 px-4 text-mono-label font-mono-label text-text-primary text-right">
-                          {sesi.total_foto}
-                        </td>
-                        <td className="py-3 px-4 text-mono-label font-mono-label text-success text-right">
-                          {sesi.siap_edit}
-                        </td>
-                        <td className="py-3 px-4">{modeIndicator(sesi)}</td>
-                        <td className="py-3 px-4">
-                          {STATUS_MAP[sesi.status_sesi] || <span className="chip">{sesi.status_sesi}</span>}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <button
-                            className="text-text-muted hover:text-text-primary transition-colors
-                                       opacity-0 group-hover:opacity-100"
-                            onClick={(e) => { e.stopPropagation(); window.location.href = `/sesi/${sesi.id}`; }}>
-                            <span className="material-symbols-outlined" style={{fontSize:18}}>arrow_forward</span>
-                          </button>
-                        </td>
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border-dark bg-surface">
+                        {['Session Name', 'Client', 'Photos', 'Ready', 'Mode', 'Status', ''].map((h) => (
+                          <th key={h} className="py-2 px-4 text-mono-label font-mono-label
+                                                 text-on-surface-variant uppercase tracking-widest">
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-border-dark">
+                      {sesiList.map((sesi) => (
+                        <tr key={sesi.id}
+                          className="hover:bg-surface-container-high transition-colors group cursor-pointer"
+                          onClick={() => navigate(`/sesi/${sesi.id}`)}>
+                          <td className="py-3 px-4">
+                            <span className="text-body-md font-body-md text-text-primary font-medium">
+                              {sesi.nama_sesi}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-mono-label font-mono-label text-on-surface-variant">
+                            {sesi.nama_klien}
+                          </td>
+                          <td className="py-3 px-4 text-mono-label font-mono-label text-text-primary text-right">
+                            {sesi.total_foto}
+                          </td>
+                          <td className="py-3 px-4 text-mono-label font-mono-label text-success text-right">
+                            {sesi.siap_edit}
+                          </td>
+                          <td className="py-3 px-4">{modeIndicator(sesi)}</td>
+                          <td className="py-3 px-4">
+                            {STATUS_MAP[sesi.status_sesi] || <span className="chip">{sesi.status_sesi}</span>}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              className="text-text-muted hover:text-text-primary transition-colors
+                                         opacity-0 group-hover:opacity-100"
+                              onClick={(e) => { e.stopPropagation(); navigate(`/sesi/${sesi.id}`); }}>
+                              <span className="material-symbols-outlined" style={{fontSize:18}}>arrow_forward</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card List */}
+                <div className="md:hidden flex flex-col gap-3 p-4">
+                  {sesiList.map((sesi) => (
+                    <div key={sesi.id}
+                      onClick={() => navigate(`/sesi/${sesi.id}`)}
+                      className="card-hover p-4 flex flex-col gap-3 active:scale-[0.98] transition-transform">
+                      
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-body-md font-body-md text-text-primary font-medium truncate">
+                            {sesi.nama_sesi}
+                          </h3>
+                          <p className="text-mono-label font-mono-label text-on-surface-variant mt-0.5">
+                            {sesi.nama_klien}
+                          </p>
+                        </div>
+                        <span className="material-symbols-outlined text-text-muted shrink-0" 
+                              style={{fontSize:20}}>
+                          arrow_forward
+                        </span>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-on-surface-variant" 
+                                style={{fontSize:16}}>
+                            photo_library
+                          </span>
+                          <span className="text-mono-label font-mono-label text-text-primary">
+                            {sesi.total_foto} photos
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-success" 
+                                style={{fontSize:16}}>
+                            check_circle
+                          </span>
+                          <span className="text-mono-label font-mono-label text-success">
+                            {sesi.siap_edit} ready
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Badges */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {modeIndicator(sesi)}
+                        {STATUS_MAP[sesi.status_sesi] || <span className="chip">{sesi.status_sesi}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>

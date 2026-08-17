@@ -117,72 +117,119 @@ export default function KlienFotoDetail() {
 
   const options = isOlehFotografer ? OPTIONS_KURATOR : OPTIONS_FULL;
 
+  const [showPanel, setShowPanel] = useState(false);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
 
       {/* Top bar */}
-      <nav className="bg-surface border-b border-border-dark px-4 md:px-6 h-16
-                      flex items-center gap-3 sticky top-0 z-40">
+      <nav className="bg-surface border-b border-border-dark px-4 md:px-6 h-14 md:h-16
+                      flex items-center gap-2 md:gap-3 sticky top-0 z-40">
         <button onClick={() => navigate(`/k/${token}/galeri`)}
-          className="text-on-surface-variant hover:text-primary transition-colors"
+          className="text-on-surface-variant hover:text-primary transition-colors
+                     p-2 -m-2 active:scale-95"
           aria-label="Back">
-          <span className="material-symbols-outlined" style={{fontSize:20}}>arrow_back</span>
+          <span className="material-symbols-outlined" style={{fontSize:22}}>arrow_back</span>
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-body-md font-body-md text-text-primary truncate font-medium">
+          <p className="text-body-sm md:text-body-md font-body-md text-text-primary truncate font-medium">
             {foto.nama_file}
           </p>
-          <p className="text-mono-label font-mono-label text-text-muted">
+          <p className="text-[11px] md:text-mono-label font-mono-label text-text-muted">
             {sesi?.nama_sesi} · {idx + 1}/{fotoList.length}
           </p>
         </div>
         <StatusBadge status={foto.status_seleksi} />
+        {/* Mobile: tombol buka panel */}
+        <button onClick={() => setShowPanel(true)}
+          className="md:hidden p-2 -m-2 text-primary-container active:scale-95"
+          aria-label="Open selection panel">
+          <span className="material-symbols-outlined" style={{fontSize:22}}>tune</span>
+        </button>
       </nav>
 
       {/* Main layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
 
         {/* Photo preview */}
-        <section className="flex-1 bg-surface-dim relative flex items-center justify-center p-4 overflow-hidden">
-          {/* Nav arrows */}
+        <section className="flex-1 bg-surface-dim relative flex items-center justify-center p-2 md:p-4 overflow-hidden">
+          {/* Nav arrows — lebih besar di mobile */}
           {[
-            { foto: prevFoto, icon: 'chevron_left',  side: 'left-4',  dir: '-translate-x-1' },
-            { foto: nextFoto, icon: 'chevron_right', side: 'right-4', dir: 'translate-x-1' },
+            { foto: prevFoto, icon: 'chevron_left',  side: 'left-2 md:left-4',  dir: '-translate-x-1' },
+            { foto: nextFoto, icon: 'chevron_right', side: 'right-2 md:right-4', dir: 'translate-x-1' },
           ].map(({ foto: f, icon, side, dir }) => (
             <button key={icon}
               disabled={!f}
               onClick={() => f && navigate(`/k/${token}/foto/${f.id}`)}
-              className={`absolute ${side} z-10 w-10 h-10 flex items-center justify-center
+              className={`absolute ${side} z-10 w-12 h-12 md:w-10 md:h-10 flex items-center justify-center
                           rounded-full border border-border-dark bg-surface-dark
                           text-text-primary hover:text-primary hover:border-primary
-                          disabled:opacity-20 disabled:cursor-not-allowed transition-colors group`}>
+                          disabled:opacity-20 disabled:cursor-not-allowed transition-colors group
+                          active:scale-95`}>
               <span className={`material-symbols-outlined group-hover:${dir} transition-transform`}
-                    style={{fontSize:20}}>{icon}</span>
+                    style={{fontSize:24}}>{icon}</span>
             </button>
           ))}
 
           {/* Image */}
-          <div className="relative shadow-2xl max-w-full max-h-[calc(100vh-8rem)]">
+          <div className="relative shadow-2xl max-w-full max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-8rem)]">
             <img
               src={proxyUrl(sesi?.nama_bucket, foto.object_key, { preset: 'medium', wm: true })}
               alt={foto.nama_file}
-              className="max-w-full max-h-[calc(100vh-8rem)] object-contain border border-border-dark"
+              className="max-w-full max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-8rem)] object-contain 
+                         border border-border-dark"
             />
             {/* Watermark diagonal text */}
             <div className="absolute inset-0 flex items-center justify-center
                             pointer-events-none select-none overflow-hidden">
-              <span className="text-headline-lg font-headline-lg font-bold text-white/20
-                               tracking-[0.2em] -rotate-12 uppercase whitespace-nowrap">
+              <span className="text-headline-md md:text-headline-lg font-headline-lg font-bold 
+                               text-white/20 tracking-[0.2em] -rotate-12 uppercase whitespace-nowrap">
                 CFC
               </span>
             </div>
           </div>
         </section>
 
-        {/* Right panel */}
-        <aside className="w-80 md:w-96 shrink-0 border-l border-border-dark bg-surface
-                          flex flex-col overflow-y-auto">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:flex w-96 shrink-0 border-l border-border-dark bg-surface
+                          flex-col overflow-y-auto">
           <div className="p-5 flex flex-col gap-5 h-full">
+            {renderPanelContent()}
+          </div>
+        </aside>
+      </div>
+
+      {/* Mobile bottom sheet */}
+      {showPanel && (
+        <div className="md:hidden fixed inset-0 z-50 flex items-end"
+             onClick={() => setShowPanel(false)}>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 animate-[fadeIn_0.2s_ease]" />
+          
+          {/* Sheet */}
+          <div className="relative w-full bg-surface rounded-t-2xl border-t border-l border-r 
+                          border-border-dark max-h-[85vh] flex flex-col animate-[slideUp_0.3s_ease]"
+               onClick={(e) => e.stopPropagation()}>
+            
+            {/* Handle bar */}
+            <div className="flex justify-center py-3 border-b border-border-dark">
+              <div className="w-10 h-1 bg-border-dark rounded-full" />
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 pb-safe">
+              {renderPanelContent()}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Panel content yang dipakai desktop sidebar dan mobile bottom sheet
+  function renderPanelContent() {
+    return (
+      <>
 
             {/* File info */}
             <div className="flex justify-between items-start border-b border-border-dark pb-4">
@@ -239,19 +286,20 @@ export default function KlienFotoDetail() {
                       const sel = status === value;
                       return (
                         <button key={value} onClick={() => setStatus(value)}
-                          className={`w-full flex items-center gap-3 p-3 rounded border transition-all text-left
+                          className={`w-full flex items-center gap-3 p-3 md:p-3 rounded border transition-all text-left
+                                     min-h-[60px] active:scale-[0.98]
                             ${sel
                               ? active
                               : `border-border-dark bg-surface-dark text-text-primary ${border}`
                             }`}
                           aria-pressed={sel}>
                           <span className="material-symbols-outlined shrink-0"
-                                style={{fontSize:18, fontVariationSettings: sel ? "'FILL' 1" : "'FILL' 0"}}>
+                                style={{fontSize:20, fontVariationSettings: sel ? "'FILL' 1" : "'FILL' 0"}}>
                             {icon}
                           </span>
                           <div>
                             <p className="text-label-sm font-label-sm uppercase tracking-wider">{label}</p>
-                            <p className="text-mono-label font-mono-label opacity-60 mt-0.5">{desc}</p>
+                            <p className="text-mono-label font-mono-label opacity-60 mt-0.5 text-xs">{desc}</p>
                           </div>
                         </button>
                       );
@@ -269,7 +317,7 @@ export default function KlienFotoDetail() {
                     className="flex-1 bg-surface-dim border border-border-dark rounded p-3
                                text-body-md font-body-md text-text-primary resize-none
                                focus:outline-none focus:border-primary-container
-                               placeholder:text-text-muted/50 transition-colors"
+                               placeholder:text-text-muted/50 transition-colors min-h-[100px]"
                     placeholder="Add retouching notes or requests…"
                     value={catatan} onChange={(e) => setCatatan(e.target.value)}
                     maxLength={1000}
@@ -279,21 +327,26 @@ export default function KlienFotoDetail() {
                   </p>
                 </div>
 
-                {/* Action buttons */}
+                {/* Action buttons — lebih besar di mobile */}
                 <div className="flex flex-col gap-2 pt-2 border-t border-border-dark">
                   <button
-                    className="btn-primary w-full justify-center py-3 text-sm"
-                    onClick={() => mutation.mutate()}
+                    className="btn-primary w-full justify-center py-4 md:py-3 text-base md:text-sm
+                               active:scale-[0.98] transition-transform"
+                    onClick={() => {
+                      mutation.mutate();
+                      setShowPanel(false);
+                    }}
                     disabled={!status || mutation.isPending}>
                     {mutation.isPending
                       ? 'Saving…'
                       : nextFoto ? 'Save & Next →' : 'Save Selection'}
                   </button>
                   <button onClick={handleDownload} disabled={downloading}
-                    className="btn-secondary w-full justify-center py-2.5 text-xs">
+                    className="btn-secondary w-full justify-center py-3 md:py-2.5 text-sm md:text-xs
+                               active:scale-[0.98] transition-transform">
                     {downloading
                       ? <><Spinner size={12} /> Preparing…</>
-                      : <><span className="material-symbols-outlined" style={{fontSize:14}}>cloud_download</span>
+                      : <><span className="material-symbols-outlined" style={{fontSize:16}}>cloud_download</span>
                           Download Original</>
                     }
                   </button>
@@ -313,14 +366,13 @@ export default function KlienFotoDetail() {
                   You're in view-only mode. To make selections, go back and choose a different mode.
                 </p>
                 <button onClick={() => navigate(`/k/${token}`)}
-                  className="btn-secondary w-full justify-center mt-3 text-xs">
+                  className="btn-secondary w-full justify-center mt-3 text-xs py-3 active:scale-[0.98]">
                   ← Change Mode
                 </button>
               </div>
             )}
-          </div>
-        </aside>
-      </div>
-    </div>
-  );
+          </>
+        );
+      }
+    }
 }

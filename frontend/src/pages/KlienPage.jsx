@@ -107,16 +107,16 @@ function HasilEditTab({ token, sesi }) {
       {/* Header + Download ZIP */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-headline-md font-headline-md text-text-primary">
+          <h2 className="text-body-md md:text-headline-md font-headline-md text-text-primary">
             Hasil Editan Final
           </h2>
-          <p className="text-mono-label font-mono-label text-on-surface-variant mt-0.5">
+          <p className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant mt-0.5">
             {hasil.length} berkas tersedia
           </p>
         </div>
         {hasil.length > 0 && (
           <button onClick={handleDownloadZip} disabled={downloading}
-            className="btn-primary">
+            className="btn-primary text-xs md:text-sm min-h-[44px] active:scale-95">
             {downloading
               ? <><Spinner size={14}/> Menyiapkan ZIP…</>
               : <><span className="material-symbols-outlined" style={{fontSize:16}}>
@@ -127,11 +127,11 @@ function HasilEditTab({ token, sesi }) {
       </div>
 
       {hasil.length === 0 ? (
-        <div className="card p-12 text-center text-on-surface-variant text-body-md font-body-md">
+        <div className="card p-8 md:p-12 text-center text-on-surface-variant text-body-md font-body-md">
           Berkas hasil edit belum tersedia.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
           {hasil.map((h) => (
             <HasilEditCard key={h.id} item={h} token={token} sesi={sesi}
               onTanggapi={(status, catatan) =>
@@ -175,11 +175,11 @@ function HasilEditCard({ item, token, sesi, onTanggapi }) {
 
       {/* Info + tombol tanggapi */}
       <div className="p-2 flex flex-col gap-1.5 bg-surface-dark flex-1">
-        <p className="text-mono-label font-mono-label text-text-muted truncate"
+        <p className="text-[11px] md:text-mono-label font-mono-label text-text-muted truncate"
            title={item.nama_file}>{item.nama_file}</p>
         <button onClick={() => setOpen(!open)}
-          className="text-mono-label font-mono-label text-primary-container
-                     hover:underline text-left">
+          className="text-[11px] md:text-mono-label font-mono-label text-primary-container
+                     hover:underline text-left py-1">
           {open ? 'Tutup' : 'Beri Tanggapan'}
         </button>
         {open && (
@@ -195,13 +195,15 @@ function HasilEditCard({ item, token, sesi, onTanggapi }) {
             />
             <div className="flex gap-1.5">
               <button onClick={() => onTanggapi('disetujui', catatan)}
-                className="flex-1 py-1 bg-success/20 border border-success/40 text-success
-                           text-mono-label font-mono-label rounded hover:bg-success/30 transition-colors">
+                className="flex-1 py-2 bg-success/20 border border-success/40 text-success
+                           text-[10px] md:text-mono-label font-mono-label rounded 
+                           hover:bg-success/30 transition-colors active:scale-95">
                 Setuju
               </button>
               <button onClick={() => onTanggapi('perlu_revisi', catatan)}
-                className="flex-1 py-1 bg-yellow-500/20 border border-yellow-500/40 text-yellow-400
-                           text-mono-label font-mono-label rounded hover:bg-yellow-500/30 transition-colors">
+                className="flex-1 py-2 bg-yellow-500/20 border border-yellow-500/40 text-yellow-400
+                           text-[10px] md:text-mono-label font-mono-label rounded 
+                           hover:bg-yellow-500/30 transition-colors active:scale-95">
                 Revisi
               </button>
             </div>
@@ -319,56 +321,60 @@ export default function KlienPage() {
       {showPopup && <ThankyouPopup onClose={handleClosePopup} />}
 
       {/* Top nav */}
-      <nav className="bg-surface border-b border-border-dark px-4 md:px-6 h-16
+      <nav className="bg-surface border-b border-border-dark px-3 md:px-6 h-14 md:h-16
                       flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
           <button onClick={() => navigate(`/k/${token}`)}
-            className="text-on-surface-variant hover:text-primary transition-colors"
+            className="text-on-surface-variant hover:text-primary transition-colors
+                       p-2 -m-2 active:scale-95 shrink-0"
             aria-label="Back">
-            <span className="material-symbols-outlined" style={{fontSize:20}}>arrow_back</span>
+            <span className="material-symbols-outlined" style={{fontSize:22}}>arrow_back</span>
           </button>
-          <div>
-            <span className="text-headline-md font-headline-md text-text-primary block leading-tight">
+          <div className="min-w-0 flex-1">
+            <span className="text-body-sm md:text-headline-md font-headline-md text-text-primary 
+                           block leading-tight truncate">
               {sesi.nama_sesi}
             </span>
-            <div className="flex items-center gap-2">
-              <span className="text-mono-label font-mono-label text-on-surface-variant">
+            <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+              <span className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant truncate">
                 {sesi.nama_klien}
               </span>
-              <span className="text-border-dark">·</span>
-              <span className="text-mono-label font-mono-label text-on-surface-variant">
+              <span className="text-border-dark hidden sm:inline">·</span>
+              <span className="text-[11px] md:text-mono-label font-mono-label text-on-surface-variant">
                 {MODE_LABEL[mode] || mode}
               </span>
               {/* Fase badge */}
-              <span className={`chip ml-1 ${isPraEdit ? 'chip-orange' : 'chip-green'}`}>
+              <span className={`chip text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 ${isPraEdit ? 'chip-orange' : 'chip-green'}`}>
                 {isPraEdit ? 'Pra-Edit' : 'Pasca-Edit'}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Tidak ada tombol download di tab seleksi —
-              download hanya tersedia di tab Hasil Edit Final */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Placeholder untuk action buttons jika diperlukan */}
         </div>
       </nav>
 
       {/* Tab bar — hanya tampil jika pasca_edit */}
       {isPascaEdit && (
-        <div className="bg-surface border-b border-border-dark px-4 md:px-6 flex gap-0">
+        <div className="bg-surface border-b border-border-dark px-2 md:px-6 flex gap-0 overflow-x-auto">
           {[
-            { key: 'seleksi', label: 'Seleksi Foto', icon: 'photo_library' },
-            { key: 'hasil',   label: 'Hasil Edit Final', icon: 'auto_fix_high' },
-          ].map(({ key, label, icon }) => (
+            { key: 'seleksi', label: 'Seleksi', labelFull: 'Seleksi Foto', icon: 'photo_library' },
+            { key: 'hasil',   label: 'Hasil', labelFull: 'Hasil Edit Final', icon: 'auto_fix_high' },
+          ].map(({ key, label, labelFull, icon }) => (
             <button key={key} onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 text-label-sm font-label-sm
-                          uppercase tracking-wider transition-colors
+              className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-3 border-b-2 
+                          text-[11px] md:text-label-sm font-label-sm
+                          uppercase tracking-wider transition-colors whitespace-nowrap
+                          min-h-[48px]
                 ${activeTab === key
                   ? 'border-primary-container text-primary-container'
                   : 'border-transparent text-on-surface-variant hover:text-text-primary'
                 }`}>
               <span className="material-symbols-outlined" style={{fontSize:16}}>{icon}</span>
-              {label}
+              <span className="hidden sm:inline">{labelFull}</span>
+              <span className="sm:hidden">{label}</span>
             </button>
           ))}
         </div>
@@ -463,15 +469,17 @@ export default function KlienPage() {
                   : baseFoto.filter((p) => p.status_seleksi === key).length;
                 return (
                   <button key={key} onClick={() => setFilter(key)}
-                    className={`px-3 py-1.5 rounded-[2px] border text-label-sm font-label-sm
-                                uppercase tracking-wider transition-colors
+                    className={`px-2.5 md:px-3 py-2 md:py-1.5 rounded-[2px] border 
+                                text-[11px] md:text-label-sm font-label-sm
+                                uppercase tracking-wider transition-colors min-h-[40px] md:min-h-0
                       ${filter === key
                         ? 'bg-primary-container/20 border-primary-container text-primary-container'
                         : 'border-border-dark text-on-surface-variant hover:bg-surface-container-high'
                       }`}>
-                    {label}
+                    <span className="hidden sm:inline">{label}</span>
+                    <span className="sm:hidden">{label.split(' ')[0]}</span>
                     {key !== 'semua' && (
-                      <span className="ml-1.5 text-mono-label font-mono-label opacity-60">
+                      <span className="ml-1 md:ml-1.5 text-[10px] md:text-mono-label font-mono-label opacity-60">
                         ({count})
                       </span>
                     )}
@@ -480,13 +488,13 @@ export default function KlienPage() {
               })}
             </div>
 
-            {/* Photo grid */}
+            {/* Photo grid - lebih besar gap di mobile */}
             {displayedFoto.length === 0 ? (
-              <div className="card p-12 text-center text-on-surface-variant text-body-md font-body-md">
+              <div className="card p-8 md:p-12 text-center text-on-surface-variant text-body-md font-body-md">
                 Tidak ada foto dalam kategori ini.
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
                 {displayedFoto.map((f, idx) => {
                   const inner = (
                     <>
