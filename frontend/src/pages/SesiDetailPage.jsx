@@ -111,8 +111,44 @@ export default function SesiDetailPage() {
   }
 
   function copyLink() {
-    navigator.clipboard.writeText(`${window.location.origin}/k/${sesi.token_akses}`);
-    toast.success('Client link copied!');
+    const url = `${window.location.origin}/k/${sesi.token_akses}`;
+
+    // navigator.clipboard hanya bekerja di HTTPS atau localhost
+    // Fallback ke execCommand untuk HTTP production
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url)
+        .then(() => toast.success('Client link copied!'))
+        .catch(() => fallbackCopy(url));
+    } else {
+      fallbackCopy(url);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try {
+      document.execCommand('copy');
+      toast.success('Client link copied!');
+    } catch {
+      // Kalau semua cara gagal, tampilkan URL agar bisa copy manual
+      toast((t) => (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Copy link ini:</p>
+          <input
+            readOnly
+            value={text}
+            className="text-xs bg-surface border border-border-dark rounded px-2 py-1 w-full"
+            onClick={(e) => e.target.select()}
+          />
+        </div>
+      ), { duration: 10000 });
+    }
+    document.body.removeChild(el);
   }
 
   async function downloadSeleksi() {
