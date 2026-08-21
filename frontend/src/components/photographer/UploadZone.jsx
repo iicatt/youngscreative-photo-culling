@@ -43,8 +43,15 @@ export default function UploadZone({ sesiId, onUploaded }) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop, accept: ACCEPT, multiple: true,
-    maxSize: 50 * 1024 * 1024,
-    onDropRejected: (rej) => rej.forEach((r) => toast.error(`${r.file.name}: ${r.errors[0]?.message}`)),
+    maxSize: 2 * 1024 * 1024 * 1024,
+    onDropRejected: (rej) => rej.forEach((r) => {
+      const reason = r.errors[0]?.code === 'file-too-large'
+        ? `${r.file.name}: File terlalu besar (maks 2 GB)`
+        : r.errors[0]?.code === 'file-invalid-type'
+        ? `${r.file.name}: Tipe file tidak didukung`
+        : `${r.file.name}: ${r.errors[0]?.message}`;
+      toast.error(reason);
+    }),
   });
 
   async function startUpload() {
@@ -104,7 +111,7 @@ export default function UploadZone({ sesiId, onUploaded }) {
               Drag photos here, or click to browse
             </p>
             <p className="text-mono-label font-mono-label text-text-muted">
-              JPG · PNG · WebP · TIFF — max 50 MB per file
+              JPG · PNG · WebP · TIFF — max 2 GB per file
             </p>
           </>
         )}

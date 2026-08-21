@@ -321,7 +321,7 @@ server {
     listen 80;
     server_name ${SERVER_IP} ${DOMAIN};
 
-    client_max_body_size 500M;
+    client_max_body_size 10G;
     proxy_read_timeout 300s;
     proxy_connect_timeout 300s;
 

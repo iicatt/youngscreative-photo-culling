@@ -24,7 +24,7 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 200 * 1024 * 1024 }, // 200 MB untuk hasil edit
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2 GB per file
   fileFilter: (_req, file, cb) => {
     const allowed = /^image\//;
     if (allowed.test(file.mimetype)) cb(null, true);
