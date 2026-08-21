@@ -46,7 +46,6 @@ export default function KlienFotoDetail() {
 
   const [status,      setStatus]      = useState('');
   const [catatan,     setCatatan]     = useState('');
-  const [downloading, setDownloading] = useState(false);
   const [showPanel,   setShowPanel]   = useState(false);
 
   const { data } = useQuery({
@@ -229,12 +228,11 @@ export default function KlienFotoDetail() {
             </button>
             <button onClick={handleDownload} disabled={downloading}
               className="btn-secondary w-full justify-center py-3 md:py-2.5 text-sm md:text-xs
-                         active:scale-[0.98] transition-transform">
-              {downloading
-                ? <><Spinner size={12} /> Preparing…</>
-                : <><span className="material-symbols-outlined" style={{fontSize:16}}>cloud_download</span>
-                    Download Original</>
-              }
+                         active:scale-[0.98] transition-transform opacity-50 cursor-not-allowed"
+              title="Foto asli tidak tersedia — hanya hasil edit final yang dapat diunduh"
+              disabled>
+              <span className="material-symbols-outlined" style={{fontSize:16}}>lock</span>
+              Download tidak tersedia
             </button>
           </div>
         </>

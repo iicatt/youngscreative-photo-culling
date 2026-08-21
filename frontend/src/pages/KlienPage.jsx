@@ -387,31 +387,7 @@ export default function KlienPage() {
 
         {/* ── Tab Hasil Edit ─────────────────────────────────── */}
         {activeTab === 'hasil' && isPascaEdit && (
-          <>
-            {/* Tombol unduh foto asli seleksi — hanya di sini, bukan di tab Seleksi */}
-            {siapEditCount > 0 && !isLihatSaja && (
-              <div className="card p-4 flex items-center justify-between gap-4 flex-wrap
-                              border-primary-container/30">
-                <div>
-                  <p className="text-label-sm font-label-sm text-primary-container uppercase tracking-wider">
-                    Foto Seleksi Asli ({siapEditCount} foto)
-                  </p>
-                  <p className="text-mono-label font-mono-label text-text-muted mt-0.5">
-                    Unduh foto resolusi penuh yang telah dipilih dari sesi ini.
-                  </p>
-                </div>
-                <button onClick={downloadSiapEdit} disabled={downloading}
-                  className="btn-secondary shrink-0 text-xs">
-                  {downloading
-                    ? <><Spinner size={12}/> Menyiapkan…</>
-                    : <><span className="material-symbols-outlined" style={{fontSize:14}}>
-                        download</span> Unduh Foto Asli Seleksi</>
-                  }
-                </button>
-              </div>
-            )}
-            <HasilEditTab token={token} sesi={sesi} />
-          </>
+          <HasilEditTab token={token} sesi={sesi} />
         )}
 
         {/* ── Tab Seleksi ────────────────────────────────────── */}
