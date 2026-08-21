@@ -74,6 +74,8 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
       JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_changeme}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      PHOTO_QUALITY_URL: http://photo-quality-service:6000
     volumes:
       - ./backend:/app
       - /app/node_modules
