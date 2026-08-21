@@ -77,12 +77,9 @@ export default function KlienLanding() {
   const sudah      = foto?.filter((f) => f.status_seleksi !== 'belum_ditinjau').length ?? 0;
   const isPraEdit  = sesi.fase_sesi === 'pra_edit' || !sesi.fase_sesi;
 
-  // Req 2.2 — di fase pra_edit, lihat_saja tidak tersedia
   const MODES = [
     {
       key:    'pilih_sendiri',
-      span:   'md:col-span-12',
-      minH:   'min-h-[300px] md:min-h-[380px]',
       label:  'Pilih Sendiri',
       tag:    'Full Selection',
       tagCls: 'text-primary-container',
@@ -92,8 +89,6 @@ export default function KlienLanding() {
     },
     {
       key:    'oleh_fotografer',
-      span:   'md:col-span-6',
-      minH:   'min-h-[220px] md:min-h-[280px]',
       label:  'Sudah Dipilihkan',
       tag:    "Curator's Pick",
       tagCls: 'text-secondary',
@@ -101,18 +96,7 @@ export default function KlienLanding() {
       icon:   'stars',
       grad:   'from-secondary/15',
     },
-    !isPraEdit && {
-      key:    'lihat_saja',
-      span:   'md:col-span-6',
-      minH:   'min-h-[220px] md:min-h-[280px]',
-      label:  'Lihat-Lihat',
-      tag:    'View Only',
-      tagCls: 'text-on-surface',
-      desc:   'Nikmati seluruh koleksi foto tanpa kewajiban memilih.',
-      icon:   'gallery_thumbnail',
-      grad:   'from-surface-container/50',
-    },
-  ].filter(Boolean);
+  ];
 
   return (
     <div className="min-h-screen bg-background flex justify-center items-center py-6 md:py-8 px-4">
@@ -194,12 +178,12 @@ export default function KlienLanding() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {MODES.map((m) => (
               <button key={m.key} onClick={() => pilih(m.key)}
-                className={`${m.span} group relative overflow-hidden rounded border border-border-dark
+                className={`group relative overflow-hidden rounded border border-border-dark
                              bg-surface-dark transition-all duration-300 hover:border-primary-container
-                             cursor-pointer ${m.minH} flex flex-col justify-end text-left
+                             cursor-pointer min-h-[280px] md:min-h-[380px] flex flex-col justify-end text-left
                              active:scale-[0.98]`}>
                 <div className={`absolute inset-0 bg-gradient-to-br ${m.grad} via-surface-dark
                                  to-surface-dark opacity-60 group-hover:opacity-80 transition-opacity`} />
