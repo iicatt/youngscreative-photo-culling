@@ -14,6 +14,10 @@ const { errorHandler } = require('./middleware/errorHandler');
 const app  = express();
 const PORT = process.env.PORT || 4000;
 
+// ─── Trust Proxy (wajib jika di belakang Nginx/load balancer) ─
+// '1' = percaya satu level proxy (Nginx)
+app.set('trust proxy', 1);
+
 // ─── Security Headers ────────────────────────────────────────
 app.use(helmet());
 
