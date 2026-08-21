@@ -226,10 +226,9 @@ export default function KlienFotoDetail() {
                 ? 'Saving…'
                 : nextFoto ? 'Save & Next →' : 'Save Selection'}
             </button>
-            <button onClick={handleDownload} disabled={downloading}
+            <button
               className="btn-secondary w-full justify-center py-3 md:py-2.5 text-sm md:text-xs
-                         active:scale-[0.98] transition-transform opacity-50 cursor-not-allowed"
-              title="Foto asli tidak tersedia — hanya hasil edit final yang dapat diunduh"
+                         opacity-50 cursor-not-allowed"
               disabled>
               <span className="material-symbols-outlined" style={{fontSize:16}}>lock</span>
               Download tidak tersedia
