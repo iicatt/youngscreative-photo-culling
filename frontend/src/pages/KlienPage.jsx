@@ -6,7 +6,7 @@
  * Req 2.7: tab Hasil Edit di pasca_edit
  */
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import toast                    from 'react-hot-toast';
 import Spinner          from '../components/common/Spinner';
@@ -218,9 +218,12 @@ function HasilEditCard({ item, token, sesi, onTanggapi }) {
 export default function KlienPage() {
   const { token }   = useParams();
   const navigate    = useNavigate();
+  const [searchParams] = useSearchParams();
   const [filter,      setFilter]      = useState('semua');
   const [downloading, setDownloading] = useState(false);
-  const [activeTab,   setActiveTab]   = useState('seleksi'); // 'seleksi' | 'hasil'
+  const [activeTab,   setActiveTab]   = useState(
+    searchParams.get('tab') === 'hasil' ? 'hasil' : 'seleksi'
+  );
   const [showPopup,   setShowPopup]   = useState(false);
 
   const { data, isLoading, isError } = useQuery({

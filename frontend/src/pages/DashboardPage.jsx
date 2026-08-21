@@ -164,7 +164,7 @@ export default function DashboardPage() {
               <span className="material-symbols-outlined text-4xl mb-1"
                     style={{fontVariationSettings:"'FILL' 1",fontSize:36}}>add_circle</span>
               <span className="text-headline-md font-headline-md font-bold">New Session</span>
-              <span className="text-mono-label font-mono-label opacity-70">CMD + N</span>
+              <span className="text-mono-label font-mono-label opacity-70"></span>
             </button>
           </div>
 

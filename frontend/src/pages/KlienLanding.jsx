@@ -26,8 +26,10 @@ export default function KlienLanding() {
   });
 
   // Req 1.5 — jika mode sudah dipilih sebelumnya, langsung ke galeri
+  // Jika fase pasca_edit, buka tab hasil edit langsung
   if (!isLoading && data?.sesi?.mode_seleksi) {
-    navigate(`/k/${token}/galeri`, { replace: true });
+    const isPascaEdit = data.sesi.fase_sesi === 'pasca_edit';
+    navigate(`/k/${token}/galeri${isPascaEdit ? '?tab=hasil' : ''}`, { replace: true });
     return null;
   }
 
