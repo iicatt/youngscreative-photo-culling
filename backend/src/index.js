@@ -35,8 +35,13 @@ app.use(express.urlencoded({ extended: true }));
 // ─── Rate Limiter (global) ───────────────────────────────────
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
-  max: 200,
+  max: 2000,                 // dinaikkan dari 200 — polling AI analysis butuh banyak request
   message: { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
+  skip: (req) => {
+    // Skip rate limit untuk request dari Docker internal network (quality service)
+    const ip = req.ip || '';
+    return ip.startsWith('172.') || ip.startsWith('10.') || ip === '::1' || ip === '127.0.0.1';
+  },
 }));
 
 // ─── Health Check ────────────────────────────────────────────
