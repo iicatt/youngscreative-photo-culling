@@ -154,6 +154,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BROWSER_REDIRECT_URL: http://116.193.191.151:9001
+      MINIO_SERVER_URL: http://116.193.191.151/minio-upload
     volumes:
       - minio_data:/data
     ports:

@@ -361,24 +361,16 @@ async function presignUpload(req, res) {
   }).parse(req.body);
 
   const EXPIRY = 3600; // 1 jam
-  // URL publik MinIO — browser akan PUT ke sini langsung
-  // Nginx akan forward /minio-upload/ → http://minio:9000/
-  const PUBLIC_MINIO = process.env.MINIO_PUBLIC_URL || `http://${process.env.SERVER_IP || '116.193.191.151'}`;
 
   const result = await Promise.all(files.map(async (f) => {
     const safeName   = `${Date.now()}-${Math.random().toString(36).slice(2,7)}-${f.nama_file.replace(/\s+/g, '_')}`;
     const object_key = `${sesiId}/${safeName}`;
 
-    // Generate presigned PUT URL (internal: http://minio:9000/...)
-    const internal_url = await minioClient.presignedPutObject(
+    // MinIO sudah dikonfigurasi MINIO_SERVER_URL = http://116.../minio-upload
+    // sehingga presigned URL yang dihasilkan sudah pakai hostname publik
+    const upload_url = await minioClient.presignedPutObject(
       nama_bucket, object_key, EXPIRY
     );
-
-    // Rewrite ke URL publik yang bisa diakses browser
-    // internal: http://minio:9000/bucket/key?X-Amz-...
-    // publik:   http://116.193.191.151/minio-upload/bucket/key?X-Amz-...
-    const url         = new URL(internal_url);
-    const upload_url  = `${PUBLIC_MINIO}/minio-upload${url.pathname}${url.search}`;
 
     return {
       object_key,
