@@ -8,6 +8,7 @@ const {
 const {
   uploadFoto, listFoto, deleteFoto,
   updateSeleksiFotografer, seleksiMassal,
+  presignUpload, confirmUpload,
 } = require('../controllers/fotoController');
 const {
   uploadHasilEdit, listHasilEdit,
@@ -52,7 +53,9 @@ router.post('/:sesiId/quality-trigger-all', qualityCtrl.triggerSemua);
 
 // ── Foto asli dalam sesi ──────────────────────────────────────
 router.get('/:sesiId/foto',                    listFoto);
-router.post('/:sesiId/foto/upload',            upload.array('foto', 100), uploadFoto);
+router.post('/:sesiId/foto/presign',           presignUpload);   // generate presigned PUT URL
+router.post('/:sesiId/foto/confirm',           confirmUpload);   // simpan metadata setelah upload
+router.post('/:sesiId/foto/upload',            upload.array('foto', 100), uploadFoto); // fallback
 router.delete('/:sesiId/foto/:fotoId',         deleteFoto);
 router.patch('/:sesiId/foto/:fotoId/seleksi',  updateSeleksiFotografer);
 router.patch('/:sesiId/seleksi-massal',        seleksiMassal);

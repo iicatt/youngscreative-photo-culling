@@ -334,6 +334,128 @@ async function downloadZipSiapEdit(req, res) {
   await archive.finalize();
 }
 
+/**
+ * POST /api/sesi/:sesiId/foto/presign
+ * Generate presigned PUT URL agar browser bisa upload langsung ke MinIO.
+ * URL di-rewrite dari internal (minio:9000) ke publik (/minio-upload/)
+ * Body: { files: [{ nama_file, mime_type, ukuran_file }] }
+ */
+async function presignUpload(req, res) {
+  const { sesiId } = req.params;
+
+  const sesiResult = await db.query(
+    'SELECT id, nama_bucket FROM sesi WHERE id = $1 AND user_id = $2',
+    [sesiId, req.user.id]
+  );
+  if (!sesiResult.rows.length) {
+    return res.status(404).json({ error: 'Sesi tidak ditemukan.' });
+  }
+  const { nama_bucket } = sesiResult.rows[0];
+
+  const { files } = z.object({
+    files: z.array(z.object({
+      nama_file:   z.string().min(1).max(500),
+      mime_type:   z.string().regex(/^image\//),
+      ukuran_file: z.number().positive(),
+    })).min(1).max(100),
+  }).parse(req.body);
+
+  const EXPIRY = 3600; // 1 jam
+  // URL publik MinIO — browser akan PUT ke sini langsung
+  // Nginx akan forward /minio-upload/ → http://minio:9000/
+  const PUBLIC_MINIO = process.env.MINIO_PUBLIC_URL || `http://${process.env.SERVER_IP || '116.193.191.151'}`;
+
+  const result = await Promise.all(files.map(async (f) => {
+    const safeName   = `${Date.now()}-${Math.random().toString(36).slice(2,7)}-${f.nama_file.replace(/\s+/g, '_')}`;
+    const object_key = `${sesiId}/${safeName}`;
+
+    // Generate presigned PUT URL (internal: http://minio:9000/...)
+    const internal_url = await minioClient.presignedPutObject(
+      nama_bucket, object_key, EXPIRY
+    );
+
+    // Rewrite ke URL publik yang bisa diakses browser
+    // internal: http://minio:9000/bucket/key?X-Amz-...
+    // publik:   http://116.193.191.151/minio-upload/bucket/key?X-Amz-...
+    const url         = new URL(internal_url);
+    const upload_url  = `${PUBLIC_MINIO}/minio-upload${url.pathname}${url.search}`;
+
+    return {
+      object_key,
+      upload_url,
+      nama_file:   f.nama_file,
+      mime_type:   f.mime_type,
+      ukuran_file: f.ukuran_file,
+      nama_bucket,
+    };
+  }));
+
+  res.json({ presigned: result, expires_in: EXPIRY });
+}
+
+/**
+ * POST /api/sesi/:sesiId/foto/confirm
+ * Setelah browser selesai upload ke MinIO, konfirmasi ke backend
+ * untuk simpan metadata ke DB dan trigger AI quality analysis.
+ * Body: { uploads: [{ object_key, nama_file, mime_type, ukuran_file, nama_bucket }] }
+ */
+async function confirmUpload(req, res) {
+  const { sesiId } = req.params;
+
+  const sesiResult = await db.query(
+    'SELECT id, nama_bucket FROM sesi WHERE id = $1 AND user_id = $2',
+    [sesiId, req.user.id]
+  );
+  if (!sesiResult.rows.length) {
+    return res.status(404).json({ error: 'Sesi tidak ditemukan.' });
+  }
+
+  const { uploads } = z.object({
+    uploads: z.array(z.object({
+      object_key:  z.string().min(1),
+      nama_file:   z.string().min(1),
+      mime_type:   z.string(),
+      ukuran_file: z.number().positive(),
+      nama_bucket: z.string().min(1),
+    })).min(1).max(100),
+  }).parse(req.body);
+
+  const saved  = [];
+  const failed = [];
+
+  for (const u of uploads) {
+    try {
+      const fotoResult = await db.query(
+        `INSERT INTO foto (sesi_id, nama_file, object_key, ukuran_file, tipe_file)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, nama_file, object_key, ukuran_file, tipe_file,
+                   status_seleksi, quality_analyzed, created_at`,
+        [sesiId, u.nama_file, u.object_key, u.ukuran_file, u.mime_type]
+      );
+      const savedFoto = fotoResult.rows[0];
+      saved.push(savedFoto);
+
+      // Trigger AI quality analysis
+      triggerQualityAnalysis({
+        fotoId:    savedFoto.id,
+        sesiId,
+        objectKey: u.object_key,
+        bucket:    u.nama_bucket,
+      });
+    } catch (err) {
+      console.error('[Confirm] Gagal simpan metadata:', u.nama_file, err.message);
+      failed.push({ nama_file: u.nama_file, error: err.message });
+    }
+  }
+
+  res.status(201).json({
+    berhasil: saved.length,
+    gagal:    failed.length,
+    uploaded: saved,
+    failed,
+  });
+}
+
 module.exports = {
   uploadFoto,
   listFoto,
@@ -343,4 +465,6 @@ module.exports = {
   seleksiMassal,
   deleteFoto,
   downloadZipSiapEdit,
+  presignUpload,
+  confirmUpload,
 };
