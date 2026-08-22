@@ -66,12 +66,7 @@ async function uploadFoto(req, res) {
       const savedFoto = fotoResult.rows[0];
       uploaded.push(savedFoto);
 
-      triggerQualityAnalysis({
-        fotoId:    savedFoto.id,
-        sesiId,
-        objectKey: object_key,
-        bucket:    nama_bucket,
-      });
+      // AI analysis TIDAK otomatis — fotografer trigger manual via RE-ANALYZE ALL
 
     } catch (err) {
       // Hapus file temp jika gagal
@@ -425,13 +420,8 @@ async function confirmUpload(req, res) {
       const savedFoto = fotoResult.rows[0];
       saved.push(savedFoto);
 
-      // Trigger AI quality analysis
-      triggerQualityAnalysis({
-        fotoId:    savedFoto.id,
-        sesiId,
-        objectKey: u.object_key,
-        bucket:    u.nama_bucket,
-      });
+      // AI analysis TIDAK otomatis — fotografer trigger manual
+
     } catch (err) {
       console.error('[Confirm] Gagal simpan metadata:', u.nama_file, err.message);
       failed.push({ nama_file: u.nama_file, error: err.message });
