@@ -31,8 +31,9 @@ def download_image_bytes(bucket: str, object_key: str) -> bytes:
     proxy_base = os.environ.get("IMAGE_PROXY_URL", "").rstrip("/")
 
     if proxy_base:
-        # Gunakan preset medium (800px) via image proxy internal
-        proxy_url = f"{proxy_base}/proxy/{bucket}/{object_key}?preset=medium&wm=0&fmt=jpeg"
+        # Gunakan preset analysis (1200px PNG lossless) — tidak ada kompresi artefak
+        # yang bisa mempengaruhi Laplacian blur score
+        proxy_url = f"{proxy_base}/proxy/{bucket}/{object_key}?preset=analysis&wm=0&fmt=png"
         try:
             req = urllib.request.Request(proxy_url, headers={"User-Agent": "quality-service/2.0"})
             with urllib.request.urlopen(req, timeout=30) as resp:

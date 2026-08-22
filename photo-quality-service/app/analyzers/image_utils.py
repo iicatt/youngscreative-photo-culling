@@ -24,7 +24,7 @@ from PIL import Image
 #   - Blur (Laplacian): lebih akurat di 900px vs 640px
 #   - MediaPipe EAR   : wajah lebih jelas di 900px
 #   - pHash duplikat  : sudah resize internal ke 32px, tidak terpengaruh
-ANALYSIS_MAX_WIDTH = 900
+ANALYSIS_MAX_WIDTH = 1200
 
 
 def load_and_resize(image_bytes: bytes) -> tuple[np.ndarray, np.ndarray, bytes]:

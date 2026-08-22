@@ -15,17 +15,21 @@ const { createWatermarkSvg } = require('./watermark');
 // ── Preset dimensi ────────────────────────────────────────────
 // thumb dikecilkan ke 240px dan pakai WebP agar thumbnail grid cepat
 const PRESETS = {
-  thumb:  { width: 240,  height: 240,  fit: 'cover',  quality: 72, fmt: 'webp' },
-  medium: { width: 900,  height: null, fit: 'inside', quality: 82, fmt: 'webp' },
-  full:   { width: 1920, height: null, fit: 'inside', quality: 88, fmt: 'jpeg' },
+  thumb:    { width: 240,  height: 240,  fit: 'cover',  quality: 72, fmt: 'webp' },
+  medium:   { width: 900,  height: null, fit: 'inside', quality: 82, fmt: 'webp' },
+  full:     { width: 1920, height: null, fit: 'inside', quality: 88, fmt: 'jpeg' },
+  // Preset khusus AI analysis — PNG lossless agar tidak ada kompresi artefak
+  // yang mempengaruhi Laplacian blur score
+  analysis: { width: 1200, height: null, fit: 'inside', quality: 100, fmt: 'png' },
 };
 
 // Cache-Control per preset (dalam detik)
 const CACHE_TTL = {
-  thumb:   7 * 24 * 3600,  // 7 hari — thumbnail tidak pernah berubah
-  medium:  24 * 3600,       // 1 hari
-  full:    3600,            // 1 jam
-  default: 3600,
+  thumb:    7 * 24 * 3600,
+  medium:   24 * 3600,
+  full:     3600,
+  analysis: 24 * 3600,
+  default:  3600,
 };
 
 /**
