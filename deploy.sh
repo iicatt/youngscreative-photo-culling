@@ -240,6 +240,7 @@ services:
       BLUR_THRESHOLD: ${BLUR_THRESHOLD:-100}
       EAR_THRESHOLD: ${EAR_THRESHOLD:-0.21}
       HAMMING_THRESHOLD: ${HAMMING_THRESHOLD:-5}
+      IMAGE_PROXY_URL: http://yc_image_proxy:5000
     networks: [yc_network]
 
   frontend:
