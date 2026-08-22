@@ -18,8 +18,13 @@ import numpy as np
 from PIL import Image
 
 # Lebar maksimum gambar yang dikirim ke analyzer.
-# 640px sudah cukup untuk semua deteksi heuristik.
-ANALYSIS_MAX_WIDTH = 640
+# 900px — sesuai dengan preset=medium dari image proxy
+# sehingga tidak ada downsampling ganda setelah download.
+# Akurasi deteksi:
+#   - Blur (Laplacian): lebih akurat di 900px vs 640px
+#   - MediaPipe EAR   : wajah lebih jelas di 900px
+#   - pHash duplikat  : sudah resize internal ke 32px, tidak terpengaruh
+ANALYSIS_MAX_WIDTH = 900
 
 
 def load_and_resize(image_bytes: bytes) -> tuple[np.ndarray, np.ndarray, bytes]:
