@@ -37,6 +37,8 @@ const upload = multer({
   },
 });
 
+router.use(authenticate);
+
 // ── Sesi CRUD ─────────────────────────────────────────────────
 router.get('/',                   listSesi);
 router.post('/',                  createSesi);
