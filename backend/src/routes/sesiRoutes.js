@@ -22,18 +22,20 @@ const {
 const qualityCtrl = require('../controllers/qualityController');
 
 const router = express.Router();
+const os     = require('os');
 
+// Disk storage — stream ke temp file, tidak buffer ke RAM
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2 GB per file
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, os.tmpdir()),
+    filename:    (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g,'_')}`),
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2 GB
   fileFilter: (_req, file, cb) => {
-    const allowed = /^image\//;
-    if (allowed.test(file.mimetype)) cb(null, true);
+    if (/^image\//.test(file.mimetype)) cb(null, true);
     else cb(new Error('Hanya file gambar yang diizinkan.'));
   },
 });
-
-router.use(authenticate);
 
 // ── Sesi CRUD ─────────────────────────────────────────────────
 router.get('/',                   listSesi);

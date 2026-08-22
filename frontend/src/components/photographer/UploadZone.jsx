@@ -1,18 +1,15 @@
 /**
- * UploadZone.jsx — Presigned URL Upload
- * =======================================
- * Alur baru: Browser upload langsung ke MinIO (bypass backend RAM)
- * 1. Request presigned PUT URL dari backend untuk setiap file
- * 2. Browser PUT file langsung ke MinIO menggunakan presigned URL
- * 3. Setelah semua selesai, kirim konfirmasi ke backend untuk simpan metadata ke DB
- *
- * Jauh lebih cepat karena tidak ada bottleneck di RAM backend.
+ * UploadZone.jsx — Streaming Upload via XHR
+ * Upload langsung ke backend dengan progress tracking per file.
+ * Backend di-stream ke MinIO tanpa buffer RAM penuh.
  */
 import { useCallback, useState } from 'react';
 import { useDropzone }           from 'react-dropzone';
 import toast                     from 'react-hot-toast';
 import Spinner                   from '../common/Spinner';
-import api                       from '../../services/api';
+import useAuthStore              from '../../store/authStore';
+
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const ACCEPT = {
   'image/jpeg': ['.jpg', '.jpeg'],
@@ -21,12 +18,9 @@ const ACCEPT = {
   'image/tiff': ['.tif', '.tiff'],
 };
 
-// Upload concurrency — berapa file yang diupload paralel sekaligus
-const CONCURRENCY = 3;
-
 function FileRow({ file, status, error, progress }) {
-  const dot = status === 'done'     ? 'bg-success'
-            : status === 'error'    ? 'bg-error'
+  const dot = status === 'done'      ? 'bg-success'
+            : status === 'error'     ? 'bg-error'
             : status === 'uploading' ? 'bg-primary-container animate-pulse'
             : 'bg-border-dark';
   return (
@@ -39,7 +33,7 @@ function FileRow({ file, status, error, progress }) {
       {status === 'uploading' && (
         <div className="flex items-center gap-1.5 shrink-0">
           <div className="w-16 h-1 bg-border-dark rounded-full overflow-hidden">
-            <div className="h-full bg-primary-container transition-all duration-300"
+            <div className="h-full bg-primary-container transition-all duration-200"
                  style={{ width: `${progress || 0}%` }} />
           </div>
           <span className="text-[10px] text-text-muted w-7 text-right">{progress || 0}%</span>
@@ -51,8 +45,8 @@ function FileRow({ file, status, error, progress }) {
         </span>
       )}
       {status === 'error' && (
-        <span className="material-symbols-outlined text-error shrink-0" style={{fontSize:14}}
-              title={error}>error</span>
+        <span className="material-symbols-outlined text-error shrink-0 cursor-help"
+              style={{fontSize:14}} title={error}>error</span>
       )}
     </div>
   );
@@ -61,6 +55,7 @@ function FileRow({ file, status, error, progress }) {
 export default function UploadZone({ sesiId, onUploaded }) {
   const [queue,     setQueue]     = useState([]);
   const [uploading, setUploading] = useState(false);
+  const token = useAuthStore((s) => s.token);
 
   const onDrop = useCallback((accepted) => {
     setQueue((prev) => [
@@ -73,43 +68,69 @@ export default function UploadZone({ sesiId, onUploaded }) {
     onDrop,
     accept:   ACCEPT,
     multiple: true,
-    maxSize:  2 * 1024 * 1024 * 1024, // 2 GB per file
+    maxSize:  2 * 1024 * 1024 * 1024,
     onDropRejected: (rej) => rej.forEach((r) => {
-      const reason = r.errors[0]?.code === 'file-too-large'
-        ? `${r.file.name}: File terlalu besar (maks 2 GB)`
-        : r.errors[0]?.code === 'file-invalid-type'
-        ? `${r.file.name}: Tipe file tidak didukung`
-        : `${r.file.name}: ${r.errors[0]?.message}`;
-      toast.error(reason);
+      const msg = r.errors[0]?.code === 'file-too-large'
+        ? `${r.file.name}: Terlalu besar (maks 2 GB)`
+        : `${r.file.name}: Tipe tidak didukung`;
+      toast.error(msg);
     }),
   });
 
-  // Upload satu file langsung ke MinIO via presigned PUT URL
-  async function uploadOnefile(item, presignData, onProgress) {
-    return new Promise((resolve, reject) => {
+  // Upload satu file via XHR dengan progress tracking
+  function uploadOneFile(file, idx) {
+    return new Promise((resolve) => {
+      const form = new FormData();
+      form.append('foto', file);
+
       const xhr = new XMLHttpRequest();
 
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
-          onProgress(Math.round((e.loaded / e.total) * 100));
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setQueue((prev) => prev.map((q, i) =>
+            i === idx ? { ...q, progress: pct } : q
+          ));
         }
       };
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
+          setQueue((prev) => prev.map((q, i) =>
+            i === idx ? { ...q, status: 'done', progress: 100 } : q
+          ));
+          resolve({ success: true });
         } else {
-          reject(new Error(`MinIO error ${xhr.status}: ${xhr.responseText.slice(0, 100)}`));
+          let msg = `Server error ${xhr.status}`;
+          try { msg = JSON.parse(xhr.responseText)?.error || msg; } catch {}
+          setQueue((prev) => prev.map((q, i) =>
+            i === idx ? { ...q, status: 'error', error: msg } : q
+          ));
+          resolve({ success: false, error: msg });
         }
       };
 
-      xhr.onerror   = () => reject(new Error('Network error saat upload ke MinIO'));
-      xhr.ontimeout = () => reject(new Error('Timeout upload ke MinIO'));
+      xhr.onerror = () => {
+        const msg = 'Network error — periksa koneksi';
+        setQueue((prev) => prev.map((q, i) =>
+          i === idx ? { ...q, status: 'error', error: msg } : q
+        ));
+        resolve({ success: false, error: msg });
+      };
 
-      xhr.open('PUT', presignData.upload_url);
-      xhr.setRequestHeader('Content-Type', item.file.type || 'application/octet-stream');
-      xhr.timeout = 30 * 60 * 1000; // 30 menit timeout per file
-      xhr.send(item.file);
+      xhr.ontimeout = () => {
+        const msg = 'Timeout — file terlalu besar atau koneksi lambat';
+        setQueue((prev) => prev.map((q, i) =>
+          i === idx ? { ...q, status: 'error', error: msg } : q
+        ));
+        resolve({ success: false, error: msg });
+      };
+
+      xhr.timeout = 60 * 60 * 1000; // 60 menit
+      xhr.open('POST', `${BASE_URL}/sesi/${sesiId}/foto/upload`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      // JANGAN set Content-Type — biar browser set boundary multipart otomatis
+      xhr.send(form);
     });
   }
 
@@ -117,101 +138,47 @@ export default function UploadZone({ sesiId, onUploaded }) {
     if (!queue.length || uploading) return;
     setUploading(true);
 
-    const pending = queue.filter((q) => q.status === 'pending');
+    const pending = queue
+      .map((q, i) => ({ ...q, idx: i }))
+      .filter((q) => q.status === 'pending');
+
     if (pending.length === 0) { setUploading(false); return; }
 
-    // ── Step 1: Request presigned URLs dari backend (semua sekaligus) ──
-    let presigned = [];
-    try {
-      const { data } = await api.post(`/sesi/${sesiId}/foto/presign`, {
-        files: pending.map((q) => ({
-          nama_file:   q.file.name,
-          mime_type:   q.file.type || 'image/jpeg',
-          ukuran_file: q.file.size,
-        })),
-      });
-      presigned = data.presigned;
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Gagal mendapatkan upload URL.');
-      setUploading(false);
-      return;
+    // Set semua ke uploading
+    setQueue((prev) => prev.map((q) =>
+      q.status === 'pending' ? { ...q, status: 'uploading' } : q
+    ));
+
+    // Upload 3 file paralel sekaligus
+    const CONCURRENT = 3;
+    let doneCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < pending.length; i += CONCURRENT) {
+      const batch = pending.slice(i, i + CONCURRENT);
+      const results = await Promise.all(
+        batch.map(({ file, idx }) => uploadOneFile(file, idx))
+      );
+      results.forEach((r) => r.success ? doneCount++ : failCount++);
+      if (doneCount > 0) onUploaded?.();
     }
 
-    // ── Step 2: Upload paralel ke MinIO (CONCURRENCY file sekaligus) ──
-    const results = []; // { presignData, success, error }
-
-    for (let i = 0; i < presigned.length; i += CONCURRENCY) {
-      const batch = presigned.slice(i, i + CONCURRENCY);
-      const batchItems = pending.slice(i, i + CONCURRENCY);
-
-      await Promise.all(batch.map(async (presignData, bIdx) => {
-        const item = batchItems[bIdx];
-        if (!item) return;
-
-        // Set status uploading
-        setQueue((prev) => prev.map((q) =>
-          q.file === item.file ? { ...q, status: 'uploading', progress: 0 } : q
-        ));
-
-        try {
-          await uploadOnefile(item, presignData, (pct) => {
-            setQueue((prev) => prev.map((q) =>
-              q.file === item.file ? { ...q, progress: pct } : q
-            ));
-          });
-
-          setQueue((prev) => prev.map((q) =>
-            q.file === item.file ? { ...q, status: 'done', progress: 100 } : q
-          ));
-          results.push({ presignData, success: true });
-
-        } catch (err) {
-          setQueue((prev) => prev.map((q) =>
-            q.file === item.file ? { ...q, status: 'error', error: err.message } : q
-          ));
-          results.push({ presignData, success: false, error: err.message });
-          console.error('[Upload] Gagal:', presignData.nama_file, err.message);
-        }
-      }));
-    }
-
-    // ── Step 3: Konfirmasi ke backend — simpan metadata yang berhasil ke DB ──
-    const berhasil = results.filter((r) => r.success);
-    if (berhasil.length > 0) {
-      try {
-        await api.post(`/sesi/${sesiId}/foto/confirm`, {
-          uploads: berhasil.map((r) => ({
-            object_key:  r.presignData.object_key,
-            nama_file:   r.presignData.nama_file,
-            mime_type:   r.presignData.mime_type,
-            ukuran_file: r.presignData.ukuran_file,
-            nama_bucket: r.presignData.nama_bucket,
-          })),
-        });
-        onUploaded?.();
-      } catch (err) {
-        toast.error('Upload berhasil tapi gagal menyimpan metadata. Coba refresh.');
-      }
-    }
-
-    const gagal = results.filter((r) => !r.success).length;
-    if (berhasil.length > 0) {
-      toast.success(`${berhasil.length} foto berhasil diupload${gagal > 0 ? `, ${gagal} gagal` : ''}.`);
+    if (doneCount > 0) {
+      toast.success(`${doneCount} foto berhasil diupload${failCount > 0 ? `, ${failCount} gagal` : ''}.`);
     } else {
-      toast.error('Semua upload gagal. Coba lagi.');
+      toast.error('Semua upload gagal.');
     }
 
     setUploading(false);
   }
 
-  const pendingCount  = queue.filter((q) => q.status === 'pending').length;
+  const pendingCount   = queue.filter((q) => q.status === 'pending').length;
   const uploadingCount = queue.filter((q) => q.status === 'uploading').length;
-  const doneCount     = queue.filter((q) => q.status === 'done').length;
-  const errorCount    = queue.filter((q) => q.status === 'error').length;
+  const doneCount      = queue.filter((q) => q.status === 'done').length;
+  const errorCount     = queue.filter((q) => q.status === 'error').length;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Drop zone */}
       <div {...getRootProps()}
         className={`border border-dashed rounded p-10 md:p-12 text-center cursor-pointer transition-colors
           ${isDragActive
@@ -238,20 +205,18 @@ export default function UploadZone({ sesiId, onUploaded }) {
         )}
       </div>
 
-      {/* File list */}
       {queue.length > 0 && (
         <div className="card p-3 max-h-72 overflow-y-auto">
           {queue.map((item, i) => <FileRow key={i} {...item} />)}
         </div>
       )}
 
-      {/* Stats bar */}
       {queue.length > 0 && (
         <div className="flex items-center gap-3 flex-wrap">
           <button className="btn-primary min-h-[44px]" onClick={startUpload}
             disabled={uploading || pendingCount === 0}>
             {uploading
-              ? <><Spinner size={14} /> Uploading {uploadingCount > 0 ? `(${uploadingCount} aktif)` : ''}…</>
+              ? <><Spinner size={14}/> Uploading {uploadingCount > 0 ? `(${uploadingCount} aktif)` : ''}…</>
               : <><span className="material-symbols-outlined" style={{fontSize:16}}>upload</span>
                   Upload {pendingCount} file{pendingCount !== 1 ? 's' : ''}</>
             }
@@ -261,10 +226,10 @@ export default function UploadZone({ sesiId, onUploaded }) {
             Clear
           </button>
           <span className="text-mono-label font-mono-label text-text-muted ml-auto flex gap-3">
-            {doneCount    > 0 && <span className="text-success">✓ {doneCount}</span>}
+            {doneCount     > 0 && <span className="text-success">✓ {doneCount}</span>}
             {uploadingCount > 0 && <span className="text-primary-container">↑ {uploadingCount}</span>}
-            {errorCount   > 0 && <span className="text-error">✗ {errorCount}</span>}
-            <span className="text-text-muted">× {queue.length}</span>
+            {errorCount    > 0 && <span className="text-error">✗ {errorCount}</span>}
+            <span>× {queue.length}</span>
           </span>
         </div>
       )}

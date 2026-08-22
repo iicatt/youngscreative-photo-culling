@@ -13,17 +13,12 @@ const { triggerQualityAnalysis } = require('../services/qualityWebhook');
 
 /**
  * POST /api/sesi/:sesiId/foto/upload
- * Menerima multipart/form-data, bisa banyak file sekaligus.
- * Middleware multer (memoryStorage) harus dipasang di router.
- *
- * Setelah setiap foto berhasil disimpan ke MinIO dan DB,
- * fungsi triggerQualityAnalysis dipanggil secara fire-and-forget
- * sehingga TIDAK menghambat response ke user.
+ * Menerima multipart/form-data — file di-stream dari disk temp ke MinIO.
  */
 async function uploadFoto(req, res) {
+  const fs = require('fs');
   const { sesiId } = req.params;
 
-  // Pastikan sesi milik fotografer yang login
   const sesiResult = await db.query(
     'SELECT id, nama_bucket FROM sesi WHERE id = $1 AND user_id = $2',
     [sesiId, req.user.id]
@@ -45,30 +40,32 @@ async function uploadFoto(req, res) {
     const object_key = `${sesiId}/${safeName}`;
 
     try {
-      // ── Langkah 1: Upload ke MinIO ─────────────────────────
+      // Stream dari disk langsung ke MinIO — tidak buffer ke RAM
+      const fileStream = fs.createReadStream(file.path);
+      const fileSize   = file.size;
+
       await minioClient.putObject(
         nama_bucket,
         object_key,
-        file.buffer,
-        file.size,
+        fileStream,
+        fileSize,
         { 'Content-Type': file.mimetype }
       );
 
-      // ── Langkah 2: Simpan metadata ke DB ───────────────────
+      // Hapus file temp setelah upload
+      fs.unlink(file.path, () => {});
+
       const fotoResult = await db.query(
         `INSERT INTO foto (sesi_id, nama_file, object_key, ukuran_file, tipe_file)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, nama_file, object_key, ukuran_file, tipe_file,
                    status_seleksi, quality_analyzed, created_at`,
-        [sesiId, file.originalname, object_key, file.size, file.mimetype]
+        [sesiId, file.originalname, object_key, fileSize, file.mimetype]
       );
 
       const savedFoto = fotoResult.rows[0];
       uploaded.push(savedFoto);
 
-      // ── Langkah 3: Trigger analisis kualitas (fire-and-forget)
-      // Dipanggil SETELAH upload + DB insert berhasil.
-      // Tidak menunggu response — response ke user sudah dikirim lebih dulu.
       triggerQualityAnalysis({
         fotoId:    savedFoto.id,
         sesiId,
@@ -77,12 +74,13 @@ async function uploadFoto(req, res) {
       });
 
     } catch (err) {
+      // Hapus file temp jika gagal
+      try { require('fs').unlinkSync(file.path); } catch {}
       console.error('[Upload] Gagal:', file.originalname, err.message);
       failed.push({ nama_file: file.originalname, error: err.message });
     }
   }
 
-  // Response dikirim sebelum analisis kualitas selesai — ini yang dimaksud fire-and-forget
   res.status(201).json({
     berhasil: uploaded.length,
     gagal:    failed.length,
