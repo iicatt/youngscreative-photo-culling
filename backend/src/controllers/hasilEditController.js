@@ -17,6 +17,7 @@ const { minioClient } = require('../config/minio');
  * Jika ini upload pertama dan fase masih pra_edit → otomatis set pasca_edit.
  */
 async function uploadHasilEdit(req, res) {
+  const fs = require('fs');
   const { sesiId } = req.params;
 
   const sesiResult = await db.query(
@@ -40,10 +41,17 @@ async function uploadHasilEdit(req, res) {
     const object_key = `${sesiId}/hasil-edit/${safeName}`;
 
     try {
+      // Stream dari disk langsung ke MinIO — sama seperti uploadFoto
+      const fileStream = fs.createReadStream(file.path);
+      const fileSize   = file.size;
+
       await minioClient.putObject(
-        nama_bucket, object_key, file.buffer, file.size,
+        nama_bucket, object_key, fileStream, fileSize,
         { 'Content-Type': file.mimetype }
       );
+
+      // Hapus file temp setelah upload
+      fs.unlink(file.path, () => {});
 
       const row = await db.query(
         `INSERT INTO foto_hasil_edit
@@ -51,16 +59,18 @@ async function uploadHasilEdit(req, res) {
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, nama_file, object_key, ukuran_file, tipe_file,
                    status_hasil, created_at`,
-        [sesiId, file.originalname, object_key, file.size, file.mimetype]
+        [sesiId, file.originalname, object_key, fileSize, file.mimetype]
       );
       uploaded.push(row.rows[0]);
     } catch (err) {
+      // Hapus file temp jika gagal
+      try { require('fs').unlinkSync(file.path); } catch {}
       console.error('[HasilEdit] Upload gagal:', file.originalname, err.message);
       failed.push({ nama_file: file.originalname, error: err.message });
     }
   }
 
-  // Req 2.6 — jika ada yang berhasil dan fase masih pra_edit → set pasca_edit
+  // Jika ada yang berhasil dan fase masih pra_edit → set pasca_edit
   if (uploaded.length > 0 && fase_sesi === 'pra_edit') {
     await db.query(
       "UPDATE sesi SET fase_sesi = 'pasca_edit' WHERE id = $1",
