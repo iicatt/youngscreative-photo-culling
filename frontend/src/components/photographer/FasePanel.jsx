@@ -37,25 +37,55 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
     onDrop,
     accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.tiff'] },
     multiple: true,
-    maxSize: 200 * 1024 * 1024,
+    maxSize: 2 * 1024 * 1024 * 1024, // 2 GB per file
   });
 
   async function uploadHasil() {
     if (!hasilQueue.length) return;
     setUploadingHasil(true);
-    const form = new FormData();
-    hasilQueue.forEach((f) => form.append('hasil', f));
-    try {
-      const { data } = await api.post(`/sesi/${sesiId}/hasil-edit/upload`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast.success(`${data.berhasil} berkas hasil edit diunggah.`);
+
+    const token = JSON.parse(localStorage.getItem('yc-auth'))?.state?.token;
+    let berhasil = 0;
+    let gagal    = 0;
+
+    // Upload per batch 3 file paralel — sama seperti UploadZone
+    const CONCURRENT = 3;
+    for (let i = 0; i < hasilQueue.length; i += CONCURRENT) {
+      const batch = hasilQueue.slice(i, i + CONCURRENT);
+      await Promise.all(batch.map((file) => new Promise((resolve) => {
+        const form = new FormData();
+        form.append('hasil', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const d = JSON.parse(xhr.responseText);
+              berhasil += d.berhasil || 0;
+              gagal    += d.gagal    || 0;
+            } catch { berhasil++; }
+          } else {
+            gagal++;
+            console.error('[HasilEdit] Upload gagal:', file.name, xhr.status, xhr.responseText);
+          }
+          resolve();
+        };
+        xhr.onerror   = () => { gagal++; resolve(); };
+        xhr.ontimeout = () => { gagal++; resolve(); };
+        xhr.timeout   = 60 * 60 * 1000; // 60 menit
+        xhr.open('POST', `/api/sesi/${sesiId}/hasil-edit/upload`);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.send(form);
+      })));
+    }
+
+    setUploadingHasil(false);
+    if (berhasil > 0) {
+      toast.success(`${berhasil} berkas hasil edit diunggah.${gagal > 0 ? ` ${gagal} gagal.` : ''}`);
       setHasilQueue([]);
-      onFaseChanged?.(); // refresh sesi untuk update fase_sesi
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Upload gagal.');
-    } finally {
-      setUploadingHasil(false);
+      onFaseChanged?.();
+    } else {
+      toast.error('Semua upload gagal. Cek koneksi atau ukuran file.');
     }
   }
 
@@ -189,7 +219,7 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
                 {isDragActive ? 'Lepas file di sini…' : 'Drag foto hasil edit, atau klik'}
               </p>
               <p className="text-mono-label font-mono-label text-text-muted mt-1">
-                JPG · PNG · WebP · TIFF — maks. 200 MB/file
+                JPG · PNG · WebP · TIFF — maks. 2 GB/file
               </p>
             </div>
 
