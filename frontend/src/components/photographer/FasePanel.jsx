@@ -15,6 +15,8 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
   const [open,            setOpen]            = useState(true);
   const [uploadingHasil,  setUploadingHasil]  = useState(false);
   const [hasilQueue,      setHasilQueue]      = useState([]);
+  const [uploadProgress,  setUploadProgress]  = useState({}); // { filename: pct }
+  const [uploadDone,      setUploadDone]      = useState({}); // { filename: true/false }
   const [eksporLoading,   setEksporLoading]   = useState(false);
   const [tandaiLoading,   setTandaiLoading]   = useState(false);
 
@@ -43,12 +45,13 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
   async function uploadHasil() {
     if (!hasilQueue.length) return;
     setUploadingHasil(true);
+    setUploadProgress({});
+    setUploadDone({});
 
     const token = JSON.parse(localStorage.getItem('yc-auth'))?.state?.token;
     let berhasil = 0;
     let gagal    = 0;
 
-    // Upload per batch 3 file paralel — sama seperti UploadZone
     const CONCURRENT = 3;
     for (let i = 0; i < hasilQueue.length; i += CONCURRENT) {
       const batch = hasilQueue.slice(i, i + CONCURRENT);
@@ -57,6 +60,15 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
         form.append('hasil', file);
 
         const xhr = new XMLHttpRequest();
+
+        // Progress per file
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setUploadProgress((prev) => ({ ...prev, [file.name]: pct }));
+          }
+        };
+
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
@@ -64,14 +76,25 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
               berhasil += d.berhasil || 0;
               gagal    += d.gagal    || 0;
             } catch { berhasil++; }
+            setUploadDone((prev) => ({ ...prev, [file.name]: 'done' }));
+            setUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
           } else {
             gagal++;
-            console.error('[HasilEdit] Upload gagal:', file.name, xhr.status, xhr.responseText);
+            setUploadDone((prev) => ({ ...prev, [file.name]: 'error' }));
+            console.error('[HasilEdit] Upload gagal:', file.name, xhr.status);
           }
           resolve();
         };
-        xhr.onerror   = () => { gagal++; resolve(); };
-        xhr.ontimeout = () => { gagal++; resolve(); };
+        xhr.onerror   = () => {
+          gagal++;
+          setUploadDone((prev) => ({ ...prev, [file.name]: 'error' }));
+          resolve();
+        };
+        xhr.ontimeout = () => {
+          gagal++;
+          setUploadDone((prev) => ({ ...prev, [file.name]: 'error' }));
+          resolve();
+        };
         xhr.timeout   = 60 * 60 * 1000; // 60 menit
         xhr.open('POST', `/api/sesi/${sesiId}/hasil-edit/upload`);
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
@@ -83,11 +106,21 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
     if (berhasil > 0) {
       toast.success(`${berhasil} berkas hasil edit diunggah.${gagal > 0 ? ` ${gagal} gagal.` : ''}`);
       setHasilQueue([]);
+      setUploadProgress({});
+      setUploadDone({});
       onFaseChanged?.();
     } else {
       toast.error('Semua upload gagal. Cek koneksi atau ukuran file.');
     }
   }
+
+  // Hitung overall progress
+  const totalFiles   = hasilQueue.length;
+  const doneCount    = Object.values(uploadDone).filter((v) => v === 'done').length;
+  const errorCount   = Object.values(uploadDone).filter((v) => v === 'error').length;
+  const overallPct   = totalFiles > 0
+    ? Math.round(Object.values(uploadProgress).reduce((a, b) => a + b, 0) / totalFiles)
+    : 0;
 
   async function tandaiSelesaiEdit() {
     if (!window.confirm('Tandai sesi ini sebagai Selesai Edit? Klien akan bisa melihat dan mengunduh hasil akhir.')) return;
@@ -224,33 +257,86 @@ export default function FasePanel({ sesiId, sesi, onFaseChanged }) {
             </div>
 
             {hasilQueue.length > 0 && (
-              <div className="mt-2 card p-3 max-h-32 overflow-y-auto">
-                {hasilQueue.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 py-1 border-b border-border-dark
-                                          last:border-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary-container shrink-0" />
-                    <span className="text-mono-label font-mono-label text-text-primary truncate flex-1">
-                      {f.name}
-                    </span>
-                    <span className="text-mono-label font-mono-label text-text-muted shrink-0">
-                      {(f.size/1024/1024).toFixed(1)} MB
-                    </span>
-                  </div>
-                ))}
+              <div className="mt-2 card p-3 max-h-48 overflow-y-auto">
+                {hasilQueue.map((f, i) => {
+                  const pct    = uploadProgress[f.name] ?? 0;
+                  const status = uploadDone[f.name];
+                  return (
+                    <div key={i} className="flex items-center gap-2 py-1.5 border-b
+                                            border-border-dark last:border-0">
+                      {/* Status dot */}
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0
+                        ${status === 'done'  ? 'bg-success' :
+                          status === 'error' ? 'bg-error' :
+                          uploadingHasil && pct > 0 ? 'bg-primary-container animate-pulse' :
+                          'bg-border-dark'}`} />
+
+                      {/* Filename */}
+                      <span className="text-mono-label font-mono-label text-text-primary
+                                       truncate flex-1 text-xs">
+                        {f.name}
+                      </span>
+
+                      {/* Size */}
+                      <span className="text-mono-label font-mono-label text-text-muted
+                                       shrink-0 text-xs">
+                        {(f.size/1024/1024).toFixed(1)} MB
+                      </span>
+
+                      {/* Progress bar atau icon */}
+                      {uploadingHasil && status !== 'done' && status !== 'error' && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <div className="w-16 h-1.5 bg-border-dark rounded-full overflow-hidden">
+                            <div className="h-full bg-primary-container transition-all duration-300"
+                                 style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-[10px] text-text-muted w-7 text-right">{pct}%</span>
+                        </div>
+                      )}
+                      {status === 'done' && (
+                        <span className="material-symbols-outlined text-success shrink-0"
+                              style={{fontSize:14}}>check_circle</span>
+                      )}
+                      {status === 'error' && (
+                        <span className="material-symbols-outlined text-error shrink-0"
+                              style={{fontSize:14}}>error</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {hasilQueue.length > 0 && (
+            {/* Overall progress bar saat uploading */}
+            {uploadingHasil && (
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-mono-label font-mono-label text-text-muted text-xs">
+                    {doneCount + errorCount}/{totalFiles} file selesai
+                  </span>
+                  <span className="text-mono-label font-mono-label text-primary-container
+                                   font-medium text-xs">
+                    {overallPct}%
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-border-dark rounded-full overflow-hidden">
+                  <div className="h-full bg-primary-container transition-all duration-300 rounded-full"
+                       style={{ width: `${overallPct}%` }} />
+                </div>
+                {errorCount > 0 && (
+                  <p className="text-xs text-error mt-1">{errorCount} file gagal</p>
+                )}
+              </div>
+            )}
+
+            {hasilQueue.length > 0 && !uploadingHasil && (
               <div className="flex gap-2 mt-2">
-                <button onClick={uploadHasil} disabled={uploadingHasil}
+                <button onClick={uploadHasil}
                   className="btn-primary text-xs py-2">
-                  {uploadingHasil
-                    ? <><Spinner size={12}/> Uploading…</>
-                    : <><span className="material-symbols-outlined" style={{fontSize:14}}>
-                        upload</span> Upload {hasilQueue.length} file</>
-                  }
+                  <span className="material-symbols-outlined" style={{fontSize:14}}>upload</span>
+                  Upload {hasilQueue.length} file
                 </button>
-                <button onClick={() => setHasilQueue([])} disabled={uploadingHasil}
+                <button onClick={() => { setHasilQueue([]); setUploadProgress({}); setUploadDone({}); }}
                   className="btn-secondary text-xs py-2">Clear</button>
               </div>
             )}
