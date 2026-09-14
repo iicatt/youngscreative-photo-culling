@@ -15,7 +15,7 @@ const { triggerQualityAnalysis } = require('../services/qualityWebhook');
 async function getQualityStatus(req, res) {
   const { sesiId } = req.params;
 
-  // Pastikan sesi milik user ini
+  // Pastikan ini adalah milik si user
   const sesiCheck = await db.query(
     'SELECT id FROM sesi WHERE id = $1 AND user_id = $2',
     [sesiId, req.user.id]

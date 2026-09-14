@@ -123,11 +123,7 @@ export default function LoginPage() {
                   <span className="material-symbols-outlined" style={{fontSize:18}}>arrow_forward</span>
                 )}
               </button>
-              <button type="button"
-                className="btn-secondary w-full justify-center py-4 md:py-3 text-sm md:text-sm
-                           min-h-[52px] md:min-h-0 active:scale-[0.98] transition-transform">
-                Request Client Access
-              </button>
+              
             </div>
           </form>
 
@@ -137,7 +133,7 @@ export default function LoginPage() {
               Secured by CFC Core
             </p>
             <p className="text-[10px] md:text-mono-label font-mono-label text-text-muted/50 mt-1">
-              Demo: fotografer@demo.com / password123
+              
             </p>
           </div>
         </div>
