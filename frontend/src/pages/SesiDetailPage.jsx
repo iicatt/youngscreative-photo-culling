@@ -409,20 +409,6 @@ export default function SesiDetailPage() {
                       <StatusBadge status={foto.status_seleksi} />
                       <QualityBadges foto={foto} size="sm" showAnalyzing />
                     </div>
-
-                    {/* Preview catatan revisi — hanya tampil jika ada catatan_klien */}
-                    {foto.status_seleksi === 'revisi' && foto.catatan_klien && (
-                      <div className="mt-1.5 pt-1 border-t border-border-dark/50">
-                        <div className="flex items-start gap-1">
-                          <span className="material-symbols-outlined text-yellow-500 shrink-0"
-                                style={{fontSize:10,marginTop:1}}>edit_note</span>
-                          <p className="text-[10px] leading-tight text-text-muted line-clamp-2"
-                             title={foto.catatan_klien}>
-                            {foto.catatan_klien}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
